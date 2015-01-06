@@ -1,4 +1,2 @@
-coq-micro-blog
-==============
-
-A micro-blogging web application example.
+# MicroBlog
+A micro-blogging web application example in Coq.
