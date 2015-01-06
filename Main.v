@@ -21,3 +21,26 @@ End Post.
 Module Posts.
   Definition t := Table.t Post.t.
 End Posts.
+
+Module Request.
+  Module Kind.
+    Inductive t : Set :=
+    | Get
+    | Post.
+  End Kind.
+
+  Record t := New {
+    kind : Kind.t;
+    url : list LString.t;
+    args : list (LString.t * LString.t) }.
+End Request.
+
+Module C.
+  Parameter t : Type.
+  Parameter Ret : t.
+End C.
+
+Module Router.
+  Definition route (request : Request.t) : C.t :=
+    C.Ret.
+End Router.
