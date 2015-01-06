@@ -1,4 +1,5 @@
 Makefile
+opam.*/
 *.vo
 *.glob
 *.v.d
