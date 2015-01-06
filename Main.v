@@ -1,5 +1,6 @@
 Require Import Coq.NArith.NArith.
-Require Import LString.
+Require Import ListString.All.
+Require Import Computation.
 Require Table.
 
 Module User.
@@ -34,11 +35,6 @@ Module Request.
     url : list LString.t;
     args : list (LString.t * LString.t) }.
 End Request.
-
-Module C.
-  Parameter t : Type.
-  Parameter Ret : t.
-End C.
 
 Module Router.
   Definition route (request : Request.t) : C.t :=
