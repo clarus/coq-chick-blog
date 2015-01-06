@@ -48,17 +48,18 @@ Module Page.
 End Page.
 
 Module Controller.
-  Definition index : C.t :=
-    do! Page.Index in
+  Definition _static (page : Page.t) : C.t :=
+    do! page in
     C.Ret.
+
+  Definition index : C.t :=
+    _static Page.Index.
 
   Definition users : C.t :=
-    do! Page.Users in
-    C.Ret.
+    _static Page.Users.
 
   Definition error : C.t :=
-    do! Page.Error in
-    C.Ret.
+    _static Page.Error.
 End Controller.
 
 Module Router.
