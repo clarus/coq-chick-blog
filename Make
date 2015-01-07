@@ -2,5 +2,6 @@
 
 Computation.v
 Main.v
+Page.v
 Simulation.v
 Table.v

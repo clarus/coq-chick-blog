@@ -2,6 +2,7 @@ Require Import Coq.Lists.List.
 Require Import Coq.NArith.NArith.
 Require Import ListString.All.
 Require Import Computation.
+Require Page.
 Require Table.
 
 Import ListNotations.
@@ -39,13 +40,6 @@ Module Request.
     url : list LString.t;
     args : list (LString.t * LString.t) }.
 End Request.
-
-Module Page.
-  Inductive t :=
-  | Index
-  | Users
-  | Error.
-End Page.
 
 Module Controller.
   Definition _static (page : Page.t) : C.t :=
