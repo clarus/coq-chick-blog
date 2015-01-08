@@ -1,4 +1,5 @@
-(** The definition of a computation, used to represent interactive programs. *)
+(** The definition of computations, used to represent interactive programs. *)
+
 Module C.
   CoInductive t : Type :=
   | Ret : t

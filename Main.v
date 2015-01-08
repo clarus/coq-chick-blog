@@ -2,7 +2,7 @@ Require Import Coq.Lists.List.
 Require Import Coq.NArith.NArith.
 Require Import ListString.All.
 Require Import Computation.
-Require Page.
+Require Http.
 Require Table.
 
 Import ListNotations.
@@ -28,36 +28,23 @@ Module Posts.
   Definition t := Table.t Post.t.
 End Posts.
 
-Module Request.
-  Module Kind.
-    Inductive t :=
-    | Get
-    | Post.
-  End Kind.
-
-  Record t := New {
-    kind : Kind.t;
-    url : list LString.t;
-    args : list (LString.t * LString.t) }.
-End Request.
-
 Module Controller.
-  Definition _static (page : Page.t) : C.t :=
-    do! page in
+  Definition _page (answer : Http.Answer.t) : C.t :=
+    do! answer in
     C.Ret.
 
   Definition index : C.t :=
-    _static Page.Index.
+    _page Http.Answer.Index.
 
   Definition users : C.t :=
-    _static Page.Users.
+    _page Http.Answer.Users.
 
   Definition error : C.t :=
-    _static Page.Error.
+    _page Http.Answer.Error.
 End Controller.
 
 Module Router.
-  Definition route (request : Request.t) : C.t :=
+  Definition route (request : Http.Request.t) : C.t :=
     let (kind, path, args) := request in
     match path with
     | [] => Controller.index
@@ -73,5 +60,5 @@ Module Router.
 End Router.
 
 CoFixpoint server : C.t :=
-  let! request : Request.t := tt in
+  let! request : Http.Request.t := tt in
   Router.route request.
