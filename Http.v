@@ -9,8 +9,7 @@ Module Request.
 
   Record t := New {
     kind : Kind.t;
-    url : list LString.t;
-    args : list (LString.t * LString.t) }.
+    url : list LString.t }.
 End Request.
 
 Module Answer.

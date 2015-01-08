@@ -45,7 +45,7 @@ End Controller.
 
 Module Router.
   Definition route (request : Http.Request.t) : C.t :=
-    let (kind, path, args) := request in
+    let (kind, path) := request in
     match path with
     | [] => Controller.index
     | dir :: path =>
