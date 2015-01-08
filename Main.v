@@ -30,7 +30,7 @@ End Posts.
 
 Module Controller.
   Definition _page (answer : Http.Answer.t) : C.t :=
-    do! answer in
+    do! Command.HttpAnswer @ answer in
     C.Ret.
 
   Definition index : C.t :=
@@ -60,5 +60,5 @@ Module Router.
 End Router.
 
 CoFixpoint server : C.t :=
-  let! request : Http.Request.t := tt in
+  let! request := Command.HttpRequest @ tt in
   Router.route request.

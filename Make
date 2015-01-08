@@ -1,6 +1,5 @@
 -R . MicroBlog
 
-Command.v
 Computation.v
 Http.v
 Main.v
