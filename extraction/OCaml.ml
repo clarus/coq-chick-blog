@@ -12,13 +12,4 @@ module String = struct
     let buffer = String.create length in
     List.iteri (fun i c -> String.set buffer i c) s;
     buffer
-
-  (*let append s1 s2 =
-    s1 ^ s2
-
-  let tokenize s =
-    Str.split_delim (Str.regexp_string " ") s
-
-  let is_empty s =
-    String.length s = 0*)
 end

@@ -30,8 +30,11 @@ Module Lwt.
   Parameter run : forall {A : Type}, t A -> A.
   Extract Constant run => "Lwt_main.run".
 
-  Parameter eprintl : OCaml.String.t -> t unit.
-  Extract Constant eprintl => "Lwt_io.printl".
+  Parameter printl : OCaml.String.t -> t unit.
+  Extract Constant printl => "Lwt_io.printl".
+
+  Parameter flush : t unit.
+  Extract Constant flush => "Lwt_io.flush Lwt_io.stdout".
 
   Parameter nextRequest : t OCaml.String.t.
   Extract Constant nextRequest => "Lwt_react.E.next Http.requests".
@@ -39,7 +42,9 @@ End Lwt.
 
 Definition log (message : LString.t) (handler : C.t) : Lwt.t C.t :=
   let message := OCaml.String.of_lstring message in
-  Lwt.bind (Lwt.eprintl message) (fun _ => Lwt.ret handler).
+  Lwt.bind (Lwt.printl message) (fun _ =>
+  Lwt.bind Lwt.flush (fun _ =>
+  Lwt.ret handler)).
 
 Definition httpRequest (handler : LString.t -> C.t) : Lwt.t C.t :=
   Lwt.bind Lwt.nextRequest (fun httpRequest =>
@@ -74,7 +79,7 @@ Parameter fixpoint : forall {A B : Type}, ((A -> Lwt.t B) -> A -> Lwt.t B) ->
   A -> Lwt.t B.
 Extract Constant fixpoint => "
   let rec fix f x =
-    fix f x in
+    f (fix f) x in
   fix".
 
 Definition eval : C.t -> Lwt.t unit :=
