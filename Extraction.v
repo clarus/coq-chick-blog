@@ -4,6 +4,19 @@ Require Import ExtrOcamlString.
 Require Import ListString.All.
 Require Import Computation.
 
+Module OCaml.
+  Module String.
+    Parameter t : Type.
+    Extract Constant t => "string".
+
+    Parameter of_lstring : LString.t -> t.
+    Extract Constant of_lstring => "OCaml.String.of_lstring".
+
+    Parameter to_lstring : t -> LString.t.
+    Extract Constant to_lstring => "OCaml.String.to_lstring".
+  End String.
+End OCaml.
+
 Module Lwt.
   Parameter t : Type -> Type.
   Extract Constant t "'a" => "'a Lwt.t".
@@ -17,19 +30,26 @@ Module Lwt.
   Parameter run : forall {A : Type}, t A -> A.
   Extract Constant run => "Lwt_main.run".
 
-  Parameter eprintl : LString.t -> Lwt.t unit.
-  Extract Constant eprintl => "Lwt_io.eprintl".
+  Parameter eprintl : OCaml.String.t -> t unit.
+  Extract Constant eprintl => "Lwt_io.printl".
+
+  Parameter nextRequest : t OCaml.String.t.
+  Extract Constant nextRequest => "Lwt_react.E.next Http.requests".
 End Lwt.
 
 Definition log (message : LString.t) (handler : C.t) : Lwt.t C.t :=
+  let message := OCaml.String.of_lstring message in
   Lwt.bind (Lwt.eprintl message) (fun _ => Lwt.ret handler).
 
-Parameter httpRequest : (LString.t -> C.t) -> Lwt.t C.t.
-Extract Constant httpRequest => "fun handler =>
-  Lwt.bind (Lwt_react.E.next_event httpRequests) (fun httpRequest ->
-  Lwt.return (handler httpRequest))".
+Definition httpRequest (handler : LString.t -> C.t) : Lwt.t C.t :=
+  Lwt.bind Lwt.nextRequest (fun httpRequest =>
+  Lwt.ret (handler (OCaml.String.to_lstring httpRequest))).
 
-Parameter httpAnswer : Http.Answer.t -> (unit -> C.t) -> Lwt.t C.t.
+(*Parameter httpAnswer : Http.Answer.t -> (unit -> C.t) -> Lwt.t C.t.
+Extract Constant httpAnswer => "...".*)
+Definition httpAnswer (answer : Http.Answer.t) (handler : unit -> C.t)
+  : Lwt.t C.t :=
+  Lwt.ret C.Ret.
 
 Definition eval_let (command : Command.t) : Command.request command ->
   (Command.answer command -> C.t) -> Lwt.t C.t :=
@@ -52,6 +72,10 @@ Definition eval_step (x : C.t) : Lwt.t (option C.t) :=
 
 Parameter fixpoint : forall {A B : Type}, ((A -> Lwt.t B) -> A -> Lwt.t B) ->
   A -> Lwt.t B.
+Extract Constant fixpoint => "
+  let rec fix f x =
+    fix f x in
+  fix".
 
 Definition eval : C.t -> Lwt.t unit :=
   fixpoint (fun f x =>
