@@ -35,6 +35,27 @@ Module Controller.
   Definition error : C.t Http.Answer.t :=
     C.Ret Http.Answer.Error.
 
+  Definition mime_type (file_name : LString.t) : LString.t :=
+    let extension := List.last (LString.split file_name ".") (LString.s "") in
+    LString.s @@ match LString.to_string extension with
+    | "html" => "text/html; charset=utf-8"
+    | "css" => "text/css"
+    | "js" => "text/javascript"
+    | "png" => "image/png"
+    | "svg" => "image/svg+xml"
+    | _ => "text/plain"
+    end.
+
+  Definition static (path : list LString.t) : C.t Http.Answer.t :=
+    let mime_type := mime_type @@ List.last path (LString.s "") in
+    let file_name := LString.join (LString.s "/") path in
+    do! Command.Log @ file_name in
+    let! content := Command.FileRead @ file_name in
+    match content with
+    | None => error
+    | Some content => C.Ret @@ Http.Answer.Static mime_type content
+    end.
+
   Definition index : C.t Http.Answer.t :=
     C.Ret Http.Answer.Index.
 
@@ -44,26 +65,18 @@ Module Controller.
   Definition args (args : list (LString.t * list LString.t))
     : C.t Http.Answer.t :=
     C.Ret @@ Http.Answer.Args args.
-
-  Definition static (path : list LString.t) : C.t Http.Answer.t :=
-    let mime_type := LString.s "text/html; charset=utf-8" in
-    let file_name := LString.join (LString.s "/") path in
-    let! content := Command.FileRead @ file_name in
-    match content with
-    | None => error
-    | Some content => C.Ret @@ Http.Answer.Static mime_type content
-    end.
 End Controller.
 
 Definition server (request : Http.Request.t) : C.t Http.Answer.t :=
   match request with
   | Http.Request.Get path args =>
-    match List.map LString.to_string path with
+    let path := List.map LString.to_string path in
+    match path with
     | [] => Controller.error
+    | "static" :: _ => Controller.static (List.map LString.s path)
     | [""] => Controller.index
     | ["users"] => Controller.users
     | ["args"] => Controller.args args
-    | "static" :: path => Controller.static (List.map LString.s path)
     | _ => Controller.error
     end
   end.

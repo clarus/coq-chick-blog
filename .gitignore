@@ -1,6 +1,7 @@
 Makefile
 Makefile.bak
 opam.*/
+extraction/static/
 *.vo
 *.glob
 *.v.d

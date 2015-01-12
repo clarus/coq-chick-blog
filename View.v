@@ -13,10 +13,9 @@ Definition header : LString.t := LString.s
   <head>
     <meta charset=""utf-8"">
     <meta name=""viewport"" content=""width=device-width, initial-scale=1"">
-    <title>Checking concurrent programs with symbolic simulations</title>
+    <title>MicroBlog</title>
     <link rel=""stylesheet"" href=""static/style.min.css"" type=""text/css"" />
     <link rel=""icon"" type=""image/png"" href=""static/favicon.png"" />
-    <link rel=""alternate"" type=""application/rss+xml"" href=""rss.xml"" />
 
     <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
     <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
@@ -29,17 +28,19 @@ Definition header : LString.t := LString.s
     <div class=""container-fluid"">
       <div class=""navbar navbar-default"" role=""navigation"">
         <div class=""navbar-header"">
-          <a class=""navbar-brand"" href=""."">Coq blog - Guillaume Claret</a>
+          <a class=""navbar-brand"" href=""."">MicroBlog</a>
         </div>
       </div>
       <div class=""article"">
+        <div class=""row"">
+          <div class=""col-md-12"">
 
-
-<div class=""row"">
-  <div class=""col-md-12"">".
+".
 
 Definition footer : LString.t := LString.s
-"          </div>
+"
+
+          </div>
         </div>
       </div>
       <hr/>
@@ -53,7 +54,8 @@ Definition footer : LString.t := LString.s
       </div>
     </div>
   </body>
-</html>".
+</html>
+".
 
 Definition mime_type (answer : Http.Answer.t) : LString.t :=
   match answer with
@@ -61,17 +63,18 @@ Definition mime_type (answer : Http.Answer.t) : LString.t :=
   | _ => LString.s "text/html; charset=utf-8"
   end.
 
+Definition pack (content : LString.t) : LString.t :=
+  header ++ content ++ footer.
+
 Definition content (answer : Http.Answer.t) : LString.t :=
-  header ++
   match answer with
-  | Http.Answer.Error => LString.s "Error"
+  | Http.Answer.Error => pack @@ LString.s "Error"
   | Http.Answer.Static _ content => content
-  | Http.Answer.Index => LString.s "Welcome to the index page!"
-  | Http.Answer.Users => LString.s "This will be the list of users."
+  | Http.Answer.Index => pack @@ LString.s "Welcome to the index page!"
+  | Http.Answer.Users => pack @@ LString.s "This will be the list of users."
   | Http.Answer.Args args =>
     let args := args |> List.map (fun (arg : _ * _) =>
       let (name, values) := arg in
       name ++ LString.s ": " ++ LString.join (LString.s ", ") values) in
-    LString.join (LString.s "<br/>" ++ [LString.Char.n]) args
-  end ++
-  footer.
+    pack @@ LString.join (LString.s "<br/>" ++ [LString.Char.n]) args
+  end.
