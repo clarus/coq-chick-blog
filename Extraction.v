@@ -27,6 +27,9 @@ Module Lwt.
   Parameter bind : forall {A B : Type}, t A -> (A -> t B) -> t B.
   Extract Constant bind => "Lwt.bind".
 
+  Parameter join : t unit -> t unit -> t unit.
+  Extract Constant join => "fun x y -> Lwt.join [x]".
+
   Parameter run : forall {A : Type}, t A -> A.
   Extract Constant run => "Lwt_main.run".
 
@@ -75,6 +78,9 @@ Definition eval_step (x : C.t) : Lwt.t (option C.t) :=
     Lwt.ret (Some x))
   end.
 
+Parameter start_server : Lwt.t unit.
+Extract Constant start_server => "Http.start_server 8008".
+
 Parameter fixpoint : forall {A B : Type}, ((A -> Lwt.t B) -> A -> Lwt.t B) ->
   A -> Lwt.t B.
 Extract Constant fixpoint => "
@@ -82,10 +88,11 @@ Extract Constant fixpoint => "
     f (fix f) x in
   fix".
 
-Definition eval : C.t -> Lwt.t unit :=
-  fixpoint (fun f x =>
-    Lwt.bind (eval_step x) (fun x =>
-    match x with
-    | None => Lwt.ret tt
-    | Some x => f x
-    end)).
+Definition eval (x : C.t) : unit :=
+  Lwt.run (Lwt.join start_server (fixpoint (fun f x =>
+      Lwt.bind (eval_step x) (fun x =>
+      match x with
+      | None => Lwt.ret tt
+      | Some x => f x
+      end))
+      x)).
