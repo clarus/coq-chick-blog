@@ -1,5 +1,7 @@
 Require Import Coq.Lists.List.
 Require Import Coq.NArith.NArith.
+Require Import Coq.Strings.String.
+Require Import FunctionNinjas.All.
 Require Import ListString.All.
 Require Import Computation.
 Require Http.
@@ -7,6 +9,7 @@ Require Table.
 
 Import ListNotations.
 Import C.Notations.
+Local Open Scope string.
 
 Module User.
   Record t := New {
@@ -29,30 +32,29 @@ Module Posts.
 End Posts.
 
 Module Controller.
+  Definition error : C.t Http.Answer.t :=
+    C.Ret Http.Answer.Error.
+
   Definition index : C.t Http.Answer.t :=
     C.Ret Http.Answer.Index.
 
   Definition users : C.t Http.Answer.t :=
     C.Ret Http.Answer.Users.
 
-  Definition error : C.t Http.Answer.t :=
-    C.Ret Http.Answer.Error.
+  Definition args (args : list (LString.t * list LString.t))
+    : C.t Http.Answer.t :=
+    C.Ret @@ Http.Answer.Args args.
 End Controller.
 
 Definition server (request : Http.Request.t) : C.t Http.Answer.t :=
   match request with
   | Http.Request.Get path args =>
-    match path with
+    match List.map LString.to_string path with
     | [] => Controller.error
-    | [[]] => Controller.index
-    | dir :: path =>
-      if LString.eqb dir (LString.s "users") then
-        match path with
-        | [] => Controller.users
-        | _ => Controller.error
-        end
-      else
-        Controller.error
+    | [""] => Controller.index
+    | ["users"] => Controller.users
+    | ["args"] => Controller.args args
+    | _ => Controller.error
     end
   end.
 

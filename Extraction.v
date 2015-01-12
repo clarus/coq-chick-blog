@@ -45,15 +45,18 @@ Fixpoint eval {A : Type} (x : C.t A) : Lwt.t A :=
     eval (handler tt))
   end.
 
-Parameter main_loop : (OCaml.String.t -> Lwt.t OCaml.String.t) -> unit.
+Parameter main_loop :
+  (list OCaml.String.t -> list (OCaml.String.t * list OCaml.String.t) -> Lwt.t OCaml.String.t) ->
+  unit.
 Extract Constant main_loop => "fun handler ->
   Lwt_main.run (Http.start_server handler 8008)".
 
 Definition main (handler : Http.Request.t -> C.t Http.Answer.t) : unit :=
-  main_loop (fun request =>
-    match Http.Request.of_string @@ OCaml.String.to_lstring request with
-    | inl request =>
-      Lwt.bind (eval @@ handler request) (fun answer =>
-      Lwt.ret @@ OCaml.String.of_lstring @@ Http.Answer.to_string answer)
-    | inr err => Lwt.ret @@ OCaml.String.of_lstring @@ LString.s "error"
-    end).
+  main_loop (fun path args =>
+    let path := List.map OCaml.String.to_lstring path in
+    let args := args |> List.map (fun (arg : _ * _) =>
+      let (name, values) := arg in
+      (OCaml.String.to_lstring name, List.map OCaml.String.to_lstring values)) in
+    let request := Http.Request.Get path args in
+    Lwt.bind (eval @@ handler request) (fun answer =>
+    Lwt.ret @@ OCaml.String.of_lstring @@ Http.Answer.to_string answer)).

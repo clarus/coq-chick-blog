@@ -9,47 +9,25 @@ Local Open Scope char.
 
 Module Request.
   Inductive t :=
-  | Get (path : list LString.t) (args : list (LString.t * LString.t)).
-
-  Fixpoint parse_arguments (arguments : list LString.t)
-    : list (LString.t * LString.t) + LString.t :=
-    match arguments with
-    | [] | [[]] => inl []
-    | argument :: arguments =>
-      match LString.split argument "=" with
-      | [k; v] =>
-        Sum.bind (parse_arguments arguments) (fun arguments =>
-        inl ((k, v) :: arguments))
-      | _ => inr @@ LString.s "expected exactly one '=' sign"
-      end
-    end.
-
-  Definition parse_path (path : LString.t) : list LString.t :=
-    match path with
-    | "/" :: path => LString.split path "/"
-    | _ => LString.split path "/"
-    end.
-
-  Definition of_string (url : LString.t) : t + LString.t :=
-    match LString.split url "?" with
-    | [name] => inl @@ Get (parse_path name) []
-    | [name; arguments] =>
-      Sum.bind (parse_arguments @@ LString.split arguments "&") (fun arguments =>
-      inl @@ Get (parse_path name) arguments)
-    | _ => inr @@ LString.s "expected at most one question mark"
-    end.
+  | Get (path : list LString.t) (args : list (LString.t * list LString.t)).
 End Request.
 
 Module Answer.
   Inductive t :=
+  | Error
   | Index
   | Users
-  | Error.
+  | Args (args : list (LString.t * list LString.t)).
 
   Definition to_string (page : t) : LString.t :=
     match page with
+    | Error => LString.s "Error"
     | Index => LString.s "Welcome to the index page!"
     | Users => LString.s "This will be the list of users."
-    | Error => LString.s "Error"
+    | Args args =>
+      let args := args |> List.map (fun (arg : _ * _) =>
+        let (name, values) := arg in
+        name ++ LString.s ": " ++ LString.join (LString.s ", ") values) in
+      LString.join [LString.Char.n] args
     end.
 End Answer.
