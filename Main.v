@@ -49,7 +49,6 @@ Module Controller.
   Definition static (path : list LString.t) : C.t Http.Answer.t :=
     let mime_type := mime_type @@ List.last path (LString.s "") in
     let file_name := LString.join (LString.s "/") path in
-    do! Command.Log @ file_name in
     let! content := Command.FileRead @ file_name in
     match content with
     | None => error
@@ -72,9 +71,8 @@ Definition server (request : Http.Request.t) : C.t Http.Answer.t :=
   | Http.Request.Get path args =>
     let path := List.map LString.to_string path in
     match path with
-    | [] => Controller.error
     | "static" :: _ => Controller.static (List.map LString.s path)
-    | [""] => Controller.index
+    | [] => Controller.index
     | ["users"] => Controller.users
     | ["args"] => Controller.args args
     | _ => Controller.error

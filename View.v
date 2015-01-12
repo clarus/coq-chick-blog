@@ -46,10 +46,7 @@ Definition footer : LString.t := LString.s
       <hr/>
       <div class=""footer"">
         <p class=""text-center"">
-          <small><a href=""rss.xml"">RSS feed</a></small>
-        </p>
-        <p class=""text-center"">
-          <small>Sources are on <a href=""https://github.com/clarus/coq-blog"">GitHub</a>. © Guillaume Claret</small>
+          <small>Sources are on <a href=""https://github.com/clarus/coq-micro-blog"">GitHub</a>. © Guillaume Claret</small>
         </p>
       </div>
     </div>
@@ -63,18 +60,25 @@ Definition mime_type (answer : Http.Answer.t) : LString.t :=
   | _ => LString.s "text/html; charset=utf-8"
   end.
 
+Definition content_args (args : list (LString.t * list LString.t)) : LString.t :=
+  let args := args |> List.map (fun (arg : _ * _) =>
+    let (name, values) := arg in
+    LString.s "<dt>" ++ name ++ LString.s "</dt><dd>" ++
+    LString.join (LString.s ", ") values ++
+    LString.s "</dd>") in
+  LString.s "<dl class=""dl-horizontal"">
+" ++ LString.join [LString.Char.n] args ++
+  LString.s "
+</dl>".
+
 Definition pack (content : LString.t) : LString.t :=
   header ++ content ++ footer.
 
 Definition content (answer : Http.Answer.t) : LString.t :=
   match answer with
-  | Http.Answer.Error => pack @@ LString.s "Error"
+  | Http.Answer.Error => pack @@ LString.s "<p>Not found.</p>"
   | Http.Answer.Static _ content => content
-  | Http.Answer.Index => pack @@ LString.s "Welcome to the index page!"
-  | Http.Answer.Users => pack @@ LString.s "This will be the list of users."
-  | Http.Answer.Args args =>
-    let args := args |> List.map (fun (arg : _ * _) =>
-      let (name, values) := arg in
-      name ++ LString.s ": " ++ LString.join (LString.s ", ") values) in
-    pack @@ LString.join (LString.s "<br/>" ++ [LString.Char.n]) args
+  | Http.Answer.Index => pack @@ LString.s "<p>Welcome to the index page!</p>"
+  | Http.Answer.Users => pack @@ LString.s "<p>This will be the list of users.</p>"
+  | Http.Answer.Args args => pack @@ content_args args
   end.

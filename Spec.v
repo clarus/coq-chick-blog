@@ -30,7 +30,7 @@ Definition unknown_page : FiniteRun.t.
 Defined.
 
 Definition index : FiniteRun.t.
-  static_page_no_args [LString.s ""] Http.Answer.Index.
+  static_page_no_args ([] : list LString.t) Http.Answer.Index.
 Defined.
 
 Definition users : FiniteRun.t.
