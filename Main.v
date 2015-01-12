@@ -40,18 +40,21 @@ Module Controller.
 End Controller.
 
 Definition server (request : Http.Request.t) : C.t Http.Answer.t :=
-  let (kind, path) := request in
-  match path with
-  | [] => Controller.error
-  | [[]] => Controller.index
-  | dir :: path =>
-    if LString.eqb dir (LString.s "users") then
-      match path with
-      | [] => Controller.users
-      | _ => Controller.error
-      end
-    else
-      Controller.error
+  match request with
+  | Http.Request.Get path =>
+    match path with
+    | [] => Controller.error
+    | [[]] => Controller.index
+    | dir :: path =>
+      if LString.eqb dir (LString.s "users") then
+        match path with
+        | [] => Controller.users
+        | _ => Controller.error
+        end
+      else
+        Controller.error
+    end
+  | Http.Request.Post _ _ => Controller.error
   end.
 
 Require Extraction.

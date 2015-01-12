@@ -51,7 +51,7 @@ Extract Constant main_loop => "fun handler ->
 
 Definition main (handler : Http.Request.t -> C.t Http.Answer.t) : unit :=
   main_loop (fun request =>
-    let path := Http.Request.path_of_string @@ OCaml.String.to_lstring request in
-    let request := Http.Request.New Http.Request.Kind.Get path in
+    let request := Http.Request.Get @@ Http.Request.path_of_string @@
+      OCaml.String.to_lstring request in
     Lwt.bind (eval @@ handler request) (fun answer =>
     Lwt.ret @@ OCaml.String.of_lstring @@ Http.Answer.to_string answer)).

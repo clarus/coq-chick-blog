@@ -6,15 +6,9 @@ Import ListNotations.
 Local Open Scope char.
 
 Module Request.
-  Module Kind.
-    Inductive t :=
-    | Get
-    | Post.
-  End Kind.
-
-  Record t := New {
-    kind : Kind.t;
-    path : list LString.t }.
+  Inductive t :=
+  | Get (path : list LString.t)
+  | Post (path : list LString.t) (args : list (LString.t * LString.t)).
 
   Definition path_of_string (path : LString.t) : list LString.t :=
     match path with

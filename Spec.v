@@ -17,7 +17,7 @@ End FiniteRun.
 
 Ltac static_page path answer :=
   apply cons; [
-  apply (RunRequest.New (Http.Request.New Http.Request.Kind.Get path));
+  apply (RunRequest.New (Http.Request.Get path));
   exact (Run.Ret answer) |
   exact nil].
 
