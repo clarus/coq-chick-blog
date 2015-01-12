@@ -41,7 +41,7 @@ End Controller.
 
 Definition server (request : Http.Request.t) : C.t Http.Answer.t :=
   match request with
-  | Http.Request.Get path =>
+  | Http.Request.Get path args =>
     match path with
     | [] => Controller.error
     | [[]] => Controller.index
@@ -54,7 +54,6 @@ Definition server (request : Http.Request.t) : C.t Http.Answer.t :=
       else
         Controller.error
     end
-  | Http.Request.Post _ _ => Controller.error
   end.
 
 Require Extraction.
