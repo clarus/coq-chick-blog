@@ -15,7 +15,6 @@ Definition header : LString.t := LString.s
     <meta name=""viewport"" content=""width=device-width, initial-scale=1"">
     <title>MicroBlog</title>
     <link rel=""stylesheet"" href=""static/style.min.css"" type=""text/css"" />
-    <link rel=""icon"" type=""image/png"" href=""static/favicon.png"" />
 
     <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
     <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
