@@ -44,6 +44,15 @@ Module Controller.
   Definition args (args : list (LString.t * list LString.t))
     : C.t Http.Answer.t :=
     C.Ret @@ Http.Answer.Args args.
+
+  Definition static (path : list LString.t) : C.t Http.Answer.t :=
+    let mime_type := LString.s "text/html; charset=utf-8" in
+    let file_name := LString.join (LString.s "/") path in
+    let! content := Command.FileRead @ file_name in
+    match content with
+    | None => error
+    | Some content => C.Ret @@ Http.Answer.Static mime_type content
+    end.
 End Controller.
 
 Definition server (request : Http.Request.t) : C.t Http.Answer.t :=
@@ -54,6 +63,7 @@ Definition server (request : Http.Request.t) : C.t Http.Answer.t :=
     | [""] => Controller.index
     | ["users"] => Controller.users
     | ["args"] => Controller.args args
+    | "static" :: path => Controller.static (List.map LString.s path)
     | _ => Controller.error
     end
   end.

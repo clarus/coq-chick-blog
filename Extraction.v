@@ -1,6 +1,7 @@
 Require Import ExtrOcamlBasic.
 Require Import ExtrOcamlBigIntConv.
 Require Import ExtrOcamlString.
+Require Import ErrorHandlers.All.
 Require Import FunctionNinjas.All.
 Require Import ListString.All.
 Require Import Computation.
@@ -35,6 +36,14 @@ Module Lwt.
 
   Parameter printl : OCaml.String.t -> t unit.
   Extract Constant printl => "Lwt_io.printl".
+
+  Parameter read_file : OCaml.String.t -> Lwt.t (option OCaml.String.t).
+  Extract Constant read_file => "fun file_name ->
+    Lwt.catch(fun _ ->
+      Lwt.bind (Lwt_io.open_file Lwt_io.Input file_name) (fun channel ->
+      Lwt.bind (Lwt_io.read channel) (fun content ->
+      Lwt.return @@ Some content)))
+      (fun _ -> Lwt.return None)".
 End Lwt.
 
 Fixpoint eval {A : Type} (x : C.t A) : Lwt.t A :=
@@ -44,6 +53,10 @@ Fixpoint eval {A : Type} (x : C.t A) : Lwt.t A :=
     let message := OCaml.String.of_lstring message in
     Lwt.bind (Lwt.printl message) (fun _ =>
     eval @@ handler tt)
+  | C.Let Command.FileRead file_name handler =>
+    let file_name := OCaml.String.of_lstring file_name in
+    Lwt.bind (Lwt.read_file file_name) (fun content =>
+    eval @@ handler @@ option_map OCaml.String.to_lstring content)
   | C.Let (Command.Database Command.Database.IsSignedUp) request handler =>
     eval @@ handler true
   end.

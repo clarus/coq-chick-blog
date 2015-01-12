@@ -21,17 +21,20 @@ Module Command.
 
   Inductive t :=
   | Log
+  | FileRead
   | Database (command : Database.t).
 
   Definition request (command : t) : Type :=
     match command with
     | Log => LString.t
+    | FileRead => LString.t
     | Database command => Database.request command
     end.
 
   Definition answer (command : t) : Type :=
     match command with
     | Log => unit
+    | FileRead => option LString.t
     | Database command => Database.answer command
     end.
 End Command.
