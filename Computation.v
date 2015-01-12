@@ -1,18 +1,38 @@
 (** The definition of computations, used to represent interactive programs. *)
 Require Import ListString.All.
 
+Local Open Scope type.
+
 Module Command.
+  Module Database.
+    Inductive t :=
+    | IsSignedUp.
+
+    Definition request (command : t) : Type :=
+      match command with
+      | IsSignedUp => LString.t * LString.t
+      end.
+
+    Definition answer (command : t) : Type :=
+      match command with
+      | IsSignedUp => bool
+      end.
+  End Database.
+
   Inductive t :=
-  | Log.
+  | Log
+  | Database (command : Database.t).
 
   Definition request (command : t) : Type :=
     match command with
     | Log => LString.t
+    | Database command => Database.request command
     end.
 
   Definition answer (command : t) : Type :=
     match command with
     | Log => unit
+    | Database command => Database.answer command
     end.
 End Command.
 

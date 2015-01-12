@@ -42,7 +42,9 @@ Fixpoint eval {A : Type} (x : C.t A) : Lwt.t A :=
   | C.Let Command.Log message handler =>
     let message := OCaml.String.of_lstring message in
     Lwt.bind (Lwt.printl message) (fun _ =>
-    eval (handler tt))
+    eval @@ handler tt)
+  | C.Let (Command.Database Command.Database.IsSignedUp) request handler =>
+    eval @@ handler true
   end.
 
 Parameter main_loop :

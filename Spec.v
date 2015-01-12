@@ -15,20 +15,28 @@ Module FiniteRun.
   Definition t := list RunRequest.t.
 End FiniteRun.
 
-Ltac static_page path answer :=
+(** Get one page and compare its result with `answer`. *)
+Ltac static_page path args answer :=
   apply cons; [
-  apply (RunRequest.New (Http.Request.Get path []));
+  apply (RunRequest.New (Http.Request.Get path args));
   exact (Run.Ret answer) |
   exact nil].
 
+Ltac static_page_no_args path answer :=
+  static_page path (nil (A := LString.t * list LString.t)) answer.
+
+Definition unknown_page : FiniteRun.t.
+  static_page_no_args [LString.s "hello"] Http.Answer.Error.
+Defined.
+
 Definition index : FiniteRun.t.
-  static_page [LString.s ""] Http.Answer.Index.
+  static_page_no_args [LString.s ""] Http.Answer.Index.
 Defined.
 
 Definition users : FiniteRun.t.
-  static_page [LString.s "users"] Http.Answer.Users.
+  static_page_no_args [LString.s "users"] Http.Answer.Users.
 Defined.
 
-Definition unknown_page : FiniteRun.t.
-  static_page [LString.s "hello"] Http.Answer.Error.
+Definition args (args : list (LString.t * list LString.t)) : FiniteRun.t.
+  static_page [LString.s "args"] args (Http.Answer.Args args).
 Defined.
