@@ -5,6 +5,7 @@ Require Import FunctionNinjas.All.
 Require Import ListString.All.
 Require Import Computation.
 Require Http.
+Require View.
 
 Module OCaml.
   Module String.
@@ -61,4 +62,4 @@ Definition main (handler : Http.Request.t -> C.t Http.Answer.t) : unit :=
       (OCaml.String.to_lstring name, List.map OCaml.String.to_lstring values)) in
     let request := Http.Request.Get path args in
     Lwt.bind (eval @@ handler request) (fun answer =>
-    Lwt.ret @@ OCaml.String.of_lstring @@ Http.Answer.to_string answer)).
+    Lwt.ret @@ OCaml.String.of_lstring @@ View.to_string answer)).

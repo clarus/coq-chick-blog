@@ -7,3 +7,4 @@ Main.v
 Simulation.v
 Spec.v
 Table.v
+View.v
