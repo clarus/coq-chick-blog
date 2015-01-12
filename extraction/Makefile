@@ -1,2 +1,2 @@
 build:
-	ocamlbuild microBlog.native -use-ocamlfind -package cohttp.lwt,lwt,lwt.react,lwt.unix,str
+	ocamlbuild microBlog.native -use-ocamlfind -package cohttp.lwt,lwt,lwt.unix,str
