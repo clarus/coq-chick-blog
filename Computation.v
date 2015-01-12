@@ -47,11 +47,5 @@ Module C.
     Notation "'do!' command '@' request 'in' X" :=
       (Let command request (fun _ => X))
       (at level 200, request at level 100, command at level 100, X at level 200).
-
-    (*Notation "'let!' i ':' I ':=' o 'in' X" := (Let I o (fun i => X))
-      (at level 200, i ident, I at level 100, o at level 100, X at level 200).
-
-    Notation "'do!' o 'in' X" := (Let unit o (fun _ => X))
-      (at level 200, o at level 100, X at level 200).*)
   End Notations.
 End C.
