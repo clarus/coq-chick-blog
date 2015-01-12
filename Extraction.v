@@ -1,6 +1,7 @@
 Require Import ExtrOcamlBasic.
 Require Import ExtrOcamlBigIntConv.
 Require Import ExtrOcamlString.
+Require Import FunctionNinjas.All.
 Require Import ListString.All.
 Require Import Computation.
 Require Http.
@@ -44,9 +45,13 @@ Fixpoint eval {A : Type} (x : C.t A) : Lwt.t A :=
     eval (handler tt))
   end.
 
-Parameter main_loop : (Http.Request.t -> Lwt.t Http.Answer.t) -> unit.
+Parameter main_loop : (OCaml.String.t -> Lwt.t OCaml.String.t) -> unit.
 Extract Constant main_loop => "fun handler ->
-  Lwt_main.run (Http.start_server 8008)".
+  Lwt_main.run (Http.start_server handler 8008)".
 
 Definition main (handler : Http.Request.t -> C.t Http.Answer.t) : unit :=
-  main_loop (fun request => eval (handler request)).
+  main_loop (fun request =>
+    let path := Http.Request.path_of_string @@ OCaml.String.to_lstring request in
+    let request := Http.Request.New Http.Request.Kind.Get path in
+    Lwt.bind (eval @@ handler request) (fun answer =>
+    Lwt.ret @@ OCaml.String.of_lstring @@ Http.Answer.to_string answer)).

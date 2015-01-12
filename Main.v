@@ -42,7 +42,8 @@ End Controller.
 Definition server (request : Http.Request.t) : C.t Http.Answer.t :=
   let (kind, path) := request in
   match path with
-  | [] => Controller.index
+  | [] => Controller.error
+  | [[]] => Controller.index
   | dir :: path =>
     if LString.eqb dir (LString.s "users") then
       match path with

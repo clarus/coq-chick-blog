@@ -1,4 +1,9 @@
+Require Import Coq.Lists.List.
+Require Import Coq.Strings.Ascii.
 Require Import ListString.All.
+
+Import ListNotations.
+Local Open Scope char.
 
 Module Request.
   Module Kind.
@@ -9,7 +14,13 @@ Module Request.
 
   Record t := New {
     kind : Kind.t;
-    url : list LString.t }.
+    path : list LString.t }.
+
+  Definition path_of_string (path : LString.t) : list LString.t :=
+    match path with
+    | "/" :: path => LString.split path "/"
+    | _ => LString.split path "/"
+    end.
 End Request.
 
 Module Answer.
