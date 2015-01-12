@@ -4,40 +4,24 @@ Require Http.
 
 Module Command.
   Inductive t :=
-  | Log
-  | HttpRequest
-  | HttpAnswer.
+  | Log.
 
   Definition request (command : t) : Type :=
     match command with
     | Log => LString.t
-    | HttpRequest => unit
-    | HttpAnswer => Http.Answer.t
     end.
 
   Definition answer (command : t) : Type :=
     match command with
     | Log => unit
-    | HttpRequest => Http.Request.t
-    | HttpAnswer => unit
     end.
 End Command.
 
 Module C.
-  CoInductive t : Type :=
+  Inductive t : Type :=
   | Ret : t
   | Let : forall (command : Command.t), Command.request command ->
     (Command.answer command -> t) -> t.
-
-  Definition step (c : t) : t :=
-    match c with
-    | Ret => Ret
-    | Let command request handler => Let command request handler
-    end.
-
-  Lemma step_eq (c : t) : c = step c.
-    destruct c; reflexivity.
-  Qed.
 
   Module Notations.
     Notation "'let!' answer ':=' command '@' request 'in' X" :=

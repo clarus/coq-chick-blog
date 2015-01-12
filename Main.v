@@ -29,9 +29,10 @@ Module Posts.
 End Posts.
 
 Module Controller.
-  Definition _page (answer : Http.Answer.t) : C.t :=
-    do! Command.HttpAnswer @ answer in
-    C.Ret.
+  Definition _page (answer : Http.Answer.t) : C.t.
+  Admitted.
+    (*do! Command.HttpAnswer @ answer in
+    C.Ret.*)
 
   Definition index : C.t :=
     _page Http.Answer.Index.
@@ -59,6 +60,6 @@ Module Router.
     end.
 End Router.
 
-CoFixpoint server : C.t :=
+(*CoFixpoint server : C.t :=
   let! request := Command.HttpRequest @ tt in
-  Router.route request.
+  Router.route request.*)

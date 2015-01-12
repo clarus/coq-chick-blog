@@ -1,7 +1,7 @@
 Require Import Computation.
 
 Module Run.
-  CoInductive t : C.t -> Type :=
+  Inductive t : C.t -> Type :=
   | Ret : t C.Ret
   | Let : forall (command : Command.t) (request : Command.request command)
     (answer : Command.answer command)
