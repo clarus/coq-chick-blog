@@ -17,7 +17,8 @@ let start_server
     let path = Str.split (Str.regexp_string "/") @@ Uri.path uri in
     let args = Uri.query uri in
     Lwt.bind (handler path args) (fun response ->
-    Cohttp_lwt_unix.Server.respond_string `OK response ()) in
+    let headers = Cohttp.Header.init_with "content-type" "text/html; charset=utf-8" in
+    (Cohttp_lwt_unix.Server.respond_string ~headers:headers) `OK response ()) in
   let config = Cohttp_lwt_unix.Server.make callback () in
   Lwt.bind (Lwt_io.printlf "HTTP server starting on port %d." port) (fun _ ->
   Cohttp_lwt_unix.Server.create ~mode:(`TCP (`Port port)) config)

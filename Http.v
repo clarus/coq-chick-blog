@@ -28,6 +28,6 @@ Module Answer.
       let args := args |> List.map (fun (arg : _ * _) =>
         let (name, values) := arg in
         name ++ LString.s ": " ++ LString.join (LString.s ", ") values) in
-      LString.join [LString.Char.n] args
+      LString.join (LString.s "<br/>" ++ [LString.Char.n]) args
     end.
 End Answer.
