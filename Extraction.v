@@ -3,6 +3,7 @@ Require Import ExtrOcamlBigIntConv.
 Require Import ExtrOcamlString.
 Require Import ListString.All.
 Require Import Computation.
+Require Http.
 
 Module OCaml.
   Module String.
@@ -34,20 +35,18 @@ Module Lwt.
   Extract Constant printl => "Lwt_io.printl".
 End Lwt.
 
-Definition log (message : LString.t) (handler : C.t) : Lwt.t C.t :=
-  let message := OCaml.String.of_lstring message in
-  Lwt.bind (Lwt.printl message) (fun _ =>
-  Lwt.ret handler).
-
-Fixpoint eval (x : C.t) : Lwt.t unit :=
+Fixpoint eval {A : Type} (x : C.t A) : Lwt.t A :=
   match x with
-  | C.Ret => Lwt.ret tt
+  | C.Ret x => Lwt.ret x
   | C.Let Command.Log message handler =>
     let message := OCaml.String.of_lstring message in
     Lwt.bind (Lwt.printl message) (fun _ =>
     eval (handler tt))
   end.
 
-Parameter main_loop : Lwt.t unit -> unit.
-Extract Constant main_loop => "fun x ->
-  ...".
+Parameter main_loop : (Http.Request.t -> Lwt.t Http.Answer.t) -> unit.
+Extract Constant main_loop => "fun handler ->
+  Lwt_main.run (Http.start_server 8008)".
+
+Definition main (handler : Http.Request.t -> C.t Http.Answer.t) : unit :=
+  main_loop (fun request => eval (handler request)).

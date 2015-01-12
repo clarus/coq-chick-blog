@@ -29,37 +29,30 @@ Module Posts.
 End Posts.
 
 Module Controller.
-  Definition _page (answer : Http.Answer.t) : C.t.
-  Admitted.
-    (*do! Command.HttpAnswer @ answer in
-    C.Ret.*)
+  Definition index : C.t Http.Answer.t :=
+    C.Ret Http.Answer.Index.
 
-  Definition index : C.t :=
-    _page Http.Answer.Index.
+  Definition users : C.t Http.Answer.t :=
+    C.Ret Http.Answer.Users.
 
-  Definition users : C.t :=
-    _page Http.Answer.Users.
-
-  Definition error : C.t :=
-    _page Http.Answer.Error.
+  Definition error : C.t Http.Answer.t :=
+    C.Ret Http.Answer.Error.
 End Controller.
 
-Module Router.
-  Definition route (request : Http.Request.t) : C.t :=
-    let (kind, path) := request in
-    match path with
-    | [] => Controller.index
-    | dir :: path =>
-      if LString.eqb dir (LString.s "users") then
-        match path with
-        | [] => Controller.users
-        | _ => Controller.error
-        end
-      else
-        Controller.error
-    end.
-End Router.
+Definition server (request : Http.Request.t) : C.t Http.Answer.t :=
+  let (kind, path) := request in
+  match path with
+  | [] => Controller.index
+  | dir :: path =>
+    if LString.eqb dir (LString.s "users") then
+      match path with
+      | [] => Controller.users
+      | _ => Controller.error
+      end
+    else
+      Controller.error
+  end.
 
-(*CoFixpoint server : C.t :=
-  let! request := Command.HttpRequest @ tt in
-  Router.route request.*)
+Require Extraction.
+Definition main := Extraction.main server.
+Extraction "extraction/microBlog" main.

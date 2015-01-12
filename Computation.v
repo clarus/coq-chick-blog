@@ -1,6 +1,5 @@
 (** The definition of computations, used to represent interactive programs. *)
 Require Import ListString.All.
-Require Http.
 
 Module Command.
   Inductive t :=
@@ -18,10 +17,12 @@ Module Command.
 End Command.
 
 Module C.
-  Inductive t : Type :=
-  | Ret : t
+  Inductive t (A : Type) : Type :=
+  | Ret : forall (x : A), t A
   | Let : forall (command : Command.t), Command.request command ->
-    (Command.answer command -> t) -> t.
+    (Command.answer command -> t A) -> t A.
+  Arguments Ret {A} _.
+  Arguments Let {A} _ _ _.
 
   Module Notations.
     Notation "'let!' answer ':=' command '@' request 'in' X" :=
