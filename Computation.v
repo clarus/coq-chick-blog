@@ -5,33 +5,16 @@ Require Import Model.
 Local Open Scope type.
 
 Module Command.
-  Module Database.
-    Inductive t :=
-    | IsSignedUp.
-
-    Definition request (command : t) : Type :=
-      match command with
-      | IsSignedUp => LString.t * LString.t
-      end.
-
-    Definition answer (command : t) : Type :=
-      match command with
-      | IsSignedUp => bool
-      end.
-  End Database.
-
   Inductive t :=
   | FileRead
   | Log
-  | ModelGet
-  | Database (command : Database.t).
+  | ModelGet.
 
   Definition request (command : t) : Type :=
     match command with
     | FileRead => LString.t
     | Log => LString.t
     | ModelGet => unit
-    | Database command => Database.request command
     end.
 
   Definition answer (command : t) : Type :=
@@ -39,7 +22,6 @@ Module Command.
     | FileRead => option LString.t
     | Log => unit
     | ModelGet => Users.t
-    | Database command => Database.answer command
     end.
 End Command.
 

@@ -58,8 +58,6 @@ Fixpoint eval {A : Type} (x : C.t A) : Lwt.t A :=
     Lwt.bind (Lwt.printl message) (fun _ =>
     eval @@ handler tt)
   | C.Let Command.ModelGet _ handler => eval @@ handler nil
-  | C.Let (Command.Database Command.Database.IsSignedUp) request handler =>
-    eval @@ handler true
   end.
 
 Parameter main_loop :
