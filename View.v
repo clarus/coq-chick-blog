@@ -59,25 +59,42 @@ Definition mime_type (answer : Http.Answer.t) : LString.t :=
   | _ => LString.s "text/html; charset=utf-8"
   end.
 
-Definition content_args (args : list (LString.t * list LString.t)) : LString.t :=
-  let args := args |> List.map (fun (arg : _ * _) =>
-    let (name, values) := arg in
-    LString.s "<dt>" ++ name ++ LString.s "</dt><dd>" ++
-    LString.join (LString.s ", ") values ++
-    LString.s "</dd>") in
-  LString.s "<dl class=""dl-horizontal"">
+Module Content.
+  Definition error : LString.t :=
+    LString.s "<h1>Error</h1>".
+
+  Definition index : LString.t :=
+    LString.s "<h1>Welcome</h1>
+<ul>
+  <li>the list of users: <a href=""users"">/users</a></li>
+  <li>a test to parse the arguments:  <a href=""args?bla=12,13&bli="">/args?bla=12,13&amp;bli=</a></li>
+</ul>".
+
+  Definition users : LString.t :=
+    LString.s "<h1>Users</h1>
+<p>The list of users.</p>".
+
+  Definition args (args : list (LString.t * list LString.t)) : LString.t :=
+    let args := args |> List.map (fun (arg : _ * _) =>
+      let (name, values) := arg in
+      LString.s "<dt>" ++ name ++ LString.s "</dt><dd>" ++
+      LString.join (LString.s ", ") values ++
+      LString.s "</dd>") in
+    LString.s "<h1>Arguments</h1>
+<dl class=""dl-horizontal"">
 " ++ LString.join [LString.Char.n] args ++
-  LString.s "
+    LString.s "
 </dl>".
+End Content.
 
 Definition pack (content : LString.t) : LString.t :=
   header ++ content ++ footer.
 
 Definition content (answer : Http.Answer.t) : LString.t :=
   match answer with
-  | Http.Answer.Error => pack @@ LString.s "<p>Not found.</p>"
+  | Http.Answer.Error => pack Content.error
   | Http.Answer.Static _ content => content
-  | Http.Answer.Index => pack @@ LString.s "<p>Welcome to the index page!</p>"
-  | Http.Answer.Users => pack @@ LString.s "<p>This will be the list of users.</p>"
-  | Http.Answer.Args args => pack @@ content_args args
+  | Http.Answer.Index => pack Content.index
+  | Http.Answer.Users => pack Content.users
+  | Http.Answer.Args args => pack @@ Content.args args
   end.
