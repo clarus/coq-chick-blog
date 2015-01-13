@@ -34,7 +34,7 @@ Definition index : FiniteRun.t.
 Defined.
 
 Definition users : FiniteRun.t.
-  static_page_no_args [LString.s "users"] Http.Answer.Users.
+  static_page_no_args [LString.s "users"] (Http.Answer.Users []).
 Defined.
 
 Definition args (args : list (LString.t * list LString.t)) : FiniteRun.t.

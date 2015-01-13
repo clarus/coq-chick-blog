@@ -3,6 +3,7 @@ Require Import Coq.Strings.Ascii.
 Require Import FunctionNinjas.All.
 Require Import ListString.All.
 Require Http.
+Require Import Model.
 
 Import ListNotations.
 Local Open Scope char.
@@ -70,7 +71,7 @@ Module Content.
   <li>a test to parse the arguments:  <a href=""args?bla=12,13&bli="">/args?bla=12,13&amp;bli=</a></li>
 </ul>".
 
-  Definition users : LString.t :=
+  Definition users (users : Users.t) : LString.t :=
     LString.s "<h1>Users</h1>
 <p>The list of users.</p>".
 
@@ -78,8 +79,7 @@ Module Content.
     let args := args |> List.map (fun (arg : _ * _) =>
       let (name, values) := arg in
       LString.s "<dt>" ++ name ++ LString.s "</dt><dd>" ++
-      LString.join (LString.s ", ") values ++
-      LString.s "</dd>") in
+      LString.join (LString.s ", ") values ++ LString.s "</dd>") in
     LString.s "<h1>Arguments</h1>
 <dl class=""dl-horizontal"">
 " ++ LString.join [LString.Char.n] args ++
@@ -95,6 +95,6 @@ Definition content (answer : Http.Answer.t) : LString.t :=
   | Http.Answer.Error => pack Content.error
   | Http.Answer.Static _ content => content
   | Http.Answer.Index => pack Content.index
-  | Http.Answer.Users => pack Content.users
+  | Http.Answer.Users users => pack @@ Content.users users
   | Http.Answer.Args args => pack @@ Content.args args
   end.

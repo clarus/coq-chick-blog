@@ -5,31 +5,10 @@ Require Import FunctionNinjas.All.
 Require Import ListString.All.
 Require Import Computation.
 Require Http.
-Require Table.
 
 Import ListNotations.
 Import C.Notations.
 Local Open Scope string.
-
-Module User.
-  Record t := New {
-    name : LString.t;
-    email : LString.t }.
-End User.
-
-Module Users.
-  Definition t := Table.t User.t.
-End Users.
-
-Module Post.
-  Record t := New {
-    user : N;
-    content : LString.t }.
-End Post.
-
-Module Posts.
-  Definition t := Table.t Post.t.
-End Posts.
 
 Module Controller.
   Definition error : C.t Http.Answer.t :=
@@ -59,7 +38,7 @@ Module Controller.
     C.Ret Http.Answer.Index.
 
   Definition users : C.t Http.Answer.t :=
-    C.Ret Http.Answer.Users.
+    C.Ret @@ Http.Answer.Users [].
 
   Definition args (args : list (LString.t * list LString.t))
     : C.t Http.Answer.t :=

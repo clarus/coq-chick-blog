@@ -1,5 +1,6 @@
 (** The definition of computations, used to represent interactive programs. *)
 Require Import ListString.All.
+Require Import Model.
 
 Local Open Scope type.
 
@@ -20,21 +21,24 @@ Module Command.
   End Database.
 
   Inductive t :=
-  | Log
   | FileRead
+  | Log
+  | ModelGet
   | Database (command : Database.t).
 
   Definition request (command : t) : Type :=
     match command with
-    | Log => LString.t
     | FileRead => LString.t
+    | Log => LString.t
+    | ModelGet => unit
     | Database command => Database.request command
     end.
 
   Definition answer (command : t) : Type :=
     match command with
-    | Log => unit
     | FileRead => option LString.t
+    | Log => unit
+    | ModelGet => Users.t
     | Database command => Database.answer command
     end.
 End Command.

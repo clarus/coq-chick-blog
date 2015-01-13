@@ -1,4 +1,5 @@
 Require Import ListString.All.
+Require Import Model.
 
 Module Request.
   Inductive t :=
@@ -10,6 +11,6 @@ Module Answer.
   | Error
   | Static (mime_type : LString.t) (content : LString.t)
   | Index
-  | Users
+  | Users (users : Users.t)
   | Args (args : list (LString.t * list LString.t)).
 End Answer.
