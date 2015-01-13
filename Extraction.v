@@ -6,6 +6,7 @@ Require Import FunctionNinjas.All.
 Require Import ListString.All.
 Require Import Computation.
 Require Http.
+Require Import Model.
 Require View.
 
 Module OCaml.
@@ -37,7 +38,7 @@ Module Lwt.
   Parameter printl : OCaml.String.t -> t unit.
   Extract Constant printl => "Lwt_io.printl".
 
-  Parameter read_file : OCaml.String.t -> Lwt.t (option OCaml.String.t).
+  Parameter read_file : OCaml.String.t -> t (option OCaml.String.t).
   Extract Constant read_file => "fun file_name ->
     Lwt.catch(fun _ ->
       Lwt.bind (Lwt_io.open_file Lwt_io.Input file_name) (fun channel ->
@@ -45,6 +46,11 @@ Module Lwt.
       Lwt.return @@ Some content)))
       (fun _ -> Lwt.return None)".
 End Lwt.
+
+Module Model.
+  Parameter users_get : unit -> list (OCaml.String.t * (OCaml.String.t * OCaml.String.t)).
+  Extract Constant users_get => "Model.users_get".
+End Model.
 
 Fixpoint eval {A : Type} (x : C.t A) : Lwt.t A :=
   match x with
@@ -57,7 +63,14 @@ Fixpoint eval {A : Type} (x : C.t A) : Lwt.t A :=
     let message := OCaml.String.of_lstring message in
     Lwt.bind (Lwt.printl message) (fun _ =>
     eval @@ handler tt)
-  | C.Let Command.ModelGet _ handler => eval @@ handler nil
+  | C.Let Command.ModelGet _ handler =>
+    let users := Model.users_get tt |> List.map (fun user =>
+      match user with
+      | (login, (password, email)) =>
+        (OCaml.String.to_lstring login,
+          User.New (OCaml.String.to_lstring password) (OCaml.String.to_lstring email))
+      end) in
+    eval @@ handler users
   end.
 
 Parameter main_loop :
