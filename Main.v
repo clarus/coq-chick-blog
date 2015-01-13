@@ -36,7 +36,15 @@ Module Controller.
     end.
 
   Definition index : C.t Http.Answer.t :=
-    C.Ret Http.Answer.Index.
+    let directory := LString.s "posts/" in
+    let! files := Command.ListFiles directory in
+    match files with
+    | None =>
+      do! Command.Log (LString.s "Cannot open the " ++ directory ++
+        LString.s " directory") in
+      C.Ret @@ Http.Answer.Index []
+    | Some files => C.Ret @@ Http.Answer.Index files
+    end.
 
   Definition users : C.t Http.Answer.t :=
     C.Ret @@ Http.Answer.Users [].

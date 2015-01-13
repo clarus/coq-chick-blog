@@ -33,7 +33,8 @@ Definition header : LString.t := LString.s
       </div>
       <div class=""article"">
         <div class=""row"">
-          <div class=""col-md-12"">
+          <div class=""col-md-1""></div>
+            <div class=""col-md-10"">
 
 ".
 
@@ -41,6 +42,7 @@ Definition footer : LString.t := LString.s
 "
 
           </div>
+          <div class=""col-md-1""></div>
         </div>
       </div>
       <hr/>
@@ -64,12 +66,18 @@ Module Content.
   Definition error : LString.t :=
     LString.s "<h1>Error</h1>".
 
-  Definition index : LString.t :=
+  Definition index (titles : list LString.t) : LString.t :=
     LString.s "<h1>Welcome</h1>
 <ul>
   <li>the list of users: <a href=""users"">/users</a></li>
   <li>a test to parse the arguments:  <a href=""args?bla=12,13&bli="">/args?bla=12,13&amp;bli=</a></li>
-</ul>".
+</ul>
+
+<h2>Posts</h2>
+<ul>" ++
+  LString.join [LString.Char.n] (titles |> List.map (fun title =>
+    LString.s "<li><a href="""">" ++ title ++ LString.s "</a> date</li>")) ++
+  LString.s "</ul>".
 
   Definition users (users : Users.t) : LString.t :=
     LString.s "<h1>Users</h1>
@@ -94,7 +102,7 @@ Definition content (answer : Http.Answer.t) : LString.t :=
   match answer with
   | Http.Answer.Error => pack Content.error
   | Http.Answer.Static _ content => content
-  | Http.Answer.Index => pack Content.index
+  | Http.Answer.Index titles => pack @@ Content.index titles
   | Http.Answer.Users users => pack @@ Content.users users
   | Http.Answer.Args args => pack @@ Content.args args
   end.

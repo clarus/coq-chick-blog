@@ -1,4 +1,5 @@
 Require Import Coq.Lists.List.
+Require Import Coq.Strings.Ascii.
 Require Import ListString.All.
 Require Import Computation.
 Require Http.
@@ -6,6 +7,7 @@ Require Main.
 Require Import Simulation.
 
 Import ListNotations.
+Local Open Scope char.
 
 Module RunRequest.
   Inductive t :=
@@ -31,8 +33,15 @@ Definition unknown_page : FiniteRun.t.
   static_page_no_args [LString.s "hello"] Http.Answer.Error.
 Defined.
 
-Definition index : FiniteRun.t.
-  static_page_no_args ([] : list LString.t) Http.Answer.Index.
+Definition index (posts : list LString.t) : FiniteRun.t.
+  apply cons.
+  - apply (RunRequest.New (Http.Request.Get [] [])).
+    simpl.
+    apply (Run.Let (Command.Log _) tt).
+    unfold Main.Controller.index; simpl.
+    apply (Run.Let (Command.ListFiles _) (Some posts)).
+    exact (Run.Ret (Http.Answer.Index posts)).
+  - exact nil.
 Defined.
 
 Definition users : FiniteRun.t.
