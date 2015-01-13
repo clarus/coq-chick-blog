@@ -1,15 +1,55 @@
+Require Import Coq.Bool.Bool.
 Require Import Coq.Lists.List.
-Require Import Coq.Strings.String.
+Require Import Coq.NArith.NArith.
+Require Import Coq.Strings.Ascii.
+Require Import ErrorHandlers.All.
+Require Import FunctionNinjas.All.
 Require Import ListString.All.
+Require Import Moment.All.
 
 Import ListNotations.
+Local Open Scope char.
 
 Module Post.
   Module Header.
     Record t := New {
       title : LString.t;
-      date : LString.t;
+      date : Moment.Date.t;
+      url : LString.t;
       file_name : LString.t }.
+
+    Fixpoint to_url (title : LString.t) : LString.t :=
+      match title with
+      | [] => []
+      | c :: title =>
+        let n := Ascii.N_of_ascii c in
+        let n_a := Ascii.N_of_ascii "a" in
+        let n_z := Ascii.N_of_ascii "z" in
+        let n_A := Ascii.N_of_ascii "A" in
+        let n_Z := Ascii.N_of_ascii "Z" in
+        let n_0 := Ascii.N_of_ascii "0" in
+        let n_9 := Ascii.N_of_ascii "9" in
+        if (N.leb n_a n && N.leb n n_z) || (N.leb n_A n && N.leb n n_Z) ||
+          (N.leb n_0 n && N.leb n n_9) then
+          LString.Char.down_case c :: to_url title 
+        else
+          "-" :: to_url title
+      end.
+
+    Definition of_file_name (file_name : LString.t) : option t :=
+      Option.bind (Date.Parse.zero_padded_year 4 file_name) (fun x =>
+      let (year, file_name') := x in
+      Option.bind (Date.Parse.zero_padded_month file_name') (fun x =>
+      let (month, file_name') := x in
+      Option.bind (Date.Parse.zero_padded_day file_name') (fun x =>
+      let (day, file_name') := x in
+      let date := Date.New year month day in
+      let extension := List.last (LString.split file_name' ".") (LString.s "") in
+      if LString.eqb extension @@ LString.s "md" then
+        let title := LString.join [] @@ List.removelast (LString.split file_name' ".") in
+        Some (New title date (to_url title) file_name)
+      else
+        None))).
   End Header.
 
   Record t := New {

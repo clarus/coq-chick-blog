@@ -75,7 +75,11 @@ Module Content.
 <h2>Posts</h2>
 <ul>" ++
   LString.join [LString.Char.n] (posts |> List.map (fun post =>
-    LString.s "<li><a href="""">" ++ Post.Header.title post ++ LString.s "</a> date</li>")) ++
+    let date := Post.Header.date post in
+    let date := Date.Print.full_month date ++ LString.s " " ++
+      Date.Print.day None date ++ LString.s ", " ++ Date.Print.year 4 None date in
+    LString.s "<li><a href=""" ++ Post.Header.url post ++ LString.s """>" ++
+    Post.Header.title post ++ LString.s "</a> " ++ date ++ LString.s "</li>")) ++
   LString.s "</ul>".
 
   Definition args (args : list (LString.t * list LString.t)) : LString.t :=

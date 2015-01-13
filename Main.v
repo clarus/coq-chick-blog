@@ -45,8 +45,14 @@ Module Controller.
         LString.s " directory") in
       C.Ret @@ Http.Answer.Index []
     | Some file_names =>
-      let posts := file_names |> List.map (fun file_name =>
-        Post.Header.New file_name (LString.s "date") file_name) in
+      let posts := file_names |> List.map Post.Header.of_file_name in
+      (* We removed the elements `None`. *)
+      let posts := List.fold_left (fun posts post =>
+        match post with
+        | None => posts
+        | Some post => post :: posts
+        end)
+        posts [] in
       C.Ret @@ Http.Answer.Index posts
     end.
 

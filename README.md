@@ -9,7 +9,7 @@ Add the Coq repositories with [OPAM](https://opam.ocaml.org/):
 
 Install the dependencies:
 
-    opam install --jobs=4 coq:list-string coq:error-handlers coq:function-ninjas
+    opam install --jobs=4 coq:list-string coq:error-handlers coq:function-ninjas coq:moment
     opam install --jobs=4 lwt cohttp
 
 Download the CSS:
