@@ -55,15 +55,15 @@ End Model.
 Fixpoint eval {A : Type} (x : C.t A) : Lwt.t A :=
   match x with
   | C.Ret x => Lwt.ret x
-  | C.Let Command.FileRead file_name handler =>
+  | C.Let (Command.FileRead file_name) handler =>
     let file_name := OCaml.String.of_lstring file_name in
     Lwt.bind (Lwt.read_file file_name) (fun content =>
     eval @@ handler @@ option_map OCaml.String.to_lstring content)
-  | C.Let Command.Log message handler =>
+  | C.Let (Command.Log message) handler =>
     let message := OCaml.String.of_lstring message in
     Lwt.bind (Lwt.printl message) (fun _ =>
     eval @@ handler tt)
-  | C.Let Command.ModelGet _ handler =>
+  | C.Let Command.ModelGet handler =>
     let users := Model.users_get tt |> List.map (fun user =>
       match user with
       | (login, (password, email)) =>

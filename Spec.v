@@ -20,7 +20,7 @@ End FiniteRun.
 Ltac static_page path args answer :=
   apply cons; [
   apply (RunRequest.New (Http.Request.Get path args));
-  apply (Run.Let Command.Log _ tt);
+  apply (Run.Let (Command.Log _) tt);
   exact (Run.Ret answer) |
   exact nil].
 
