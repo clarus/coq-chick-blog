@@ -9,6 +9,7 @@ Require Http.
 Import ListNotations.
 Import C.Notations.
 Local Open Scope string.
+Local Open Scope list.
 
 Module Controller.
   Definition error : C.t Http.Answer.t :=
@@ -48,6 +49,7 @@ End Controller.
 Definition server (request : Http.Request.t) : C.t Http.Answer.t :=
   match request with
   | Http.Request.Get path args =>
+    do! Command.Log @ (LString.s "GET /" ++ LString.join (LString.s "/") path) in
     let path := List.map LString.to_string path in
     match path with
     | "static" :: _ => Controller.static (List.map LString.s path)
