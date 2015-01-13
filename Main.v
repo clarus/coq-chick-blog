@@ -5,6 +5,7 @@ Require Import FunctionNinjas.All.
 Require Import ListString.All.
 Require Import Computation.
 Require Http.
+Require Import Model.
 
 Import ListNotations.
 Import C.Notations.
@@ -37,17 +38,17 @@ Module Controller.
 
   Definition index : C.t Http.Answer.t :=
     let directory := LString.s "posts/" in
-    let! files := Command.ListFiles directory in
-    match files with
+    let! file_names := Command.ListFiles directory in
+    match file_names with
     | None =>
       do! Command.Log (LString.s "Cannot open the " ++ directory ++
         LString.s " directory") in
       C.Ret @@ Http.Answer.Index []
-    | Some files => C.Ret @@ Http.Answer.Index files
+    | Some file_names =>
+      let posts := file_names |> List.map (fun file_name =>
+        Post.Header.New file_name (LString.s "date") file_name) in
+      C.Ret @@ Http.Answer.Index posts
     end.
-
-  Definition users : C.t Http.Answer.t :=
-    C.Ret @@ Http.Answer.Users [].
 
   Definition args (args : list (LString.t * list LString.t))
     : C.t Http.Answer.t :=
@@ -62,7 +63,6 @@ Definition server (request : Http.Request.t) : C.t Http.Answer.t :=
     match path with
     | "static" :: _ => Controller.static (List.map LString.s path)
     | [] => Controller.index
-    | ["users"] => Controller.users
     | ["args"] => Controller.args args
     | _ => Controller.error
     end

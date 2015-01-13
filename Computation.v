@@ -8,15 +8,13 @@ Module Command.
   Inductive t :=
   | FileRead (file_name : LString.t)
   | ListFiles (directory : LString.t)
-  | Log (message : LString.t)
-  | ModelGet.
+  | Log (message : LString.t).
 
   Definition answer (command : t) : Type :=
     match command with
     | FileRead _ => option LString.t
     | ListFiles _ => option (list LString.t)
     | Log _ => unit
-    | ModelGet => Users.t
     end.
 End Command.
 

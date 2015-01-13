@@ -66,22 +66,17 @@ Module Content.
   Definition error : LString.t :=
     LString.s "<h1>Error</h1>".
 
-  Definition index (titles : list LString.t) : LString.t :=
+  Definition index (posts : list Post.Header.t) : LString.t :=
     LString.s "<h1>Welcome</h1>
 <ul>
-  <li>the list of users: <a href=""users"">/users</a></li>
   <li>a test to parse the arguments:  <a href=""args?bla=12,13&bli="">/args?bla=12,13&amp;bli=</a></li>
 </ul>
 
 <h2>Posts</h2>
 <ul>" ++
-  LString.join [LString.Char.n] (titles |> List.map (fun title =>
-    LString.s "<li><a href="""">" ++ title ++ LString.s "</a> date</li>")) ++
+  LString.join [LString.Char.n] (posts |> List.map (fun post =>
+    LString.s "<li><a href="""">" ++ Post.Header.title post ++ LString.s "</a> date</li>")) ++
   LString.s "</ul>".
-
-  Definition users (users : Users.t) : LString.t :=
-    LString.s "<h1>Users</h1>
-<p>The list of users.</p>".
 
   Definition args (args : list (LString.t * list LString.t)) : LString.t :=
     let args := args |> List.map (fun (arg : _ * _) =>
@@ -102,7 +97,6 @@ Definition content (answer : Http.Answer.t) : LString.t :=
   match answer with
   | Http.Answer.Error => pack Content.error
   | Http.Answer.Static _ content => content
-  | Http.Answer.Index titles => pack @@ Content.index titles
-  | Http.Answer.Users users => pack @@ Content.users users
+  | Http.Answer.Index posts => pack @@ Content.index posts
   | Http.Answer.Args args => pack @@ Content.args args
   end.

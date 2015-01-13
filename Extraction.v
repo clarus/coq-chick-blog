@@ -53,11 +53,6 @@ Module Lwt.
       (fun _ -> Lwt.return None)".
 End Lwt.
 
-Module Model.
-  Parameter users_get : unit -> list (String.t * (String.t * String.t)).
-  Extract Constant users_get => "Model.users_get".
-End Model.
-
 Fixpoint eval {A : Type} (x : C.t A) : Lwt.t A :=
   match x with
   | C.Ret x => Lwt.ret x
@@ -74,14 +69,6 @@ Fixpoint eval {A : Type} (x : C.t A) : Lwt.t A :=
     let message := String.of_lstring message in
     Lwt.bind (Lwt.printl message) (fun _ =>
     eval @@ handler tt)
-  | C.Let Command.ModelGet handler =>
-    let users := Model.users_get tt |> List.map (fun user =>
-      match user with
-      | (login, (password, email)) =>
-        (String.to_lstring login,
-          User.New (String.to_lstring password) (String.to_lstring email))
-      end) in
-    eval @@ handler users
   end.
 
 Parameter main_loop :

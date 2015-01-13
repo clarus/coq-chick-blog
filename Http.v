@@ -10,7 +10,6 @@ Module Answer.
   Inductive t :=
   | Error
   | Static (mime_type : LString.t) (content : LString.t)
-  | Index (titles : list LString.t)
-  | Users (users : Users.t)
+  | Index (posts : list Post.Header.t)
   | Args (args : list (LString.t * list LString.t)).
 End Answer.
