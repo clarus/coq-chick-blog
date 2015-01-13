@@ -59,6 +59,8 @@ Fixpoint eval {A : Type} (x : C.t A) : Lwt.t A :=
     let file_name := OCaml.String.of_lstring file_name in
     Lwt.bind (Lwt.read_file file_name) (fun content =>
     eval @@ handler @@ option_map OCaml.String.to_lstring content)
+  | C.Let (Command.ListFiles directory) handler =>
+    eval @@ handler None
   | C.Let (Command.Log message) handler =>
     let message := OCaml.String.of_lstring message in
     Lwt.bind (Lwt.printl message) (fun _ =>
