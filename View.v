@@ -14,7 +14,7 @@ Definition header (root : LString.t) (is_logged : bool) : LString.t :=
   <head>
     <meta charset=""utf-8"">
     <meta name=""viewport"" content=""width=device-width, initial-scale=1"">
-    <title>MicroBlog</title>
+    <title>ChickBlog</title>
     <link rel=""stylesheet"" href=""" ++ root ++ LString.s "static/style.min.css"" type=""text/css"" />
 
     <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
@@ -28,7 +28,7 @@ Definition header (root : LString.t) (is_logged : bool) : LString.t :=
     <div class=""container-fluid"">
       <div class=""navbar navbar-default"" role=""navigation"">
         <div class=""navbar-header"">
-          <a class=""navbar-brand"" href=""/" ++ root ++ LString.s """>MicroBlog</a>
+          <a class=""navbar-brand"" href=""/" ++ root ++ LString.s """>ChickBlog</a>
         </div>
         <div class=""collapse navbar-collapse"" id=""bs-example-navbar-collapse-1"">
           <ul class=""nav navbar-nav navbar-right"">
@@ -81,7 +81,7 @@ Module Content.
 
   Definition index (posts : list Post.Header.t) : LString.t :=
     LString.s "<h1>Welcome</h1>
-<p>This is a blog specified and proven in <a href=""https://coq.inria.fr/"">Coq</a>. The sources are on <a href=""https://github.com/clarus/coq-micro-blog"">GitHub</a>.</p>
+<p>This is a blog written and proven in <a href=""https://coq.inria.fr/"">Coq</a>. The sources are on <a href=""https://github.com/clarus/coq-micro-blog"">GitHub</a>.</p>
 
 <h2>Posts</h2>
 <ul>" ++

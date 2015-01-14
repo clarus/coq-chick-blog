@@ -1,5 +1,5 @@
-# MicroBlog
-A micro-blogging web application in Coq.
+# ChickBlog
+A blog engine written and proven in Coq.
 
 ## Run
 Add the Coq repositories with [OPAM](https://opam.ocaml.org/):
