@@ -73,6 +73,7 @@ Module Content.
 
   Definition index (posts : list Post.Header.t) : LString.t :=
     LString.s "<h1>Welcome</h1>
+<p>This is a blog specified and proven in <a href=""https://coq.inria.fr/"">Coq</a>. The sources are on <a href=""https://github.com/clarus/coq-micro-blog"">GitHub</a>.</p>
 <ul>
   <li>a test to parse the arguments:  <a href=""args?bla=12,13&bli="">/args?bla=12,13&amp;bli=</a></li>
 </ul>
