@@ -30,6 +30,5 @@ Module Answer.
   | Index (posts : list Post.Header.t)
   | PostShow (post : option Post.t)
   | PostEdit (post : option Post.t)
-  | PostUpdate (is_success : bool)
-  | Args (args : Arguments.t).
+  | PostUpdate (is_success : bool).
 End Answer.

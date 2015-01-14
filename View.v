@@ -74,9 +74,6 @@ Module Content.
   Definition index (posts : list Post.Header.t) : LString.t :=
     LString.s "<h1>Welcome</h1>
 <p>This is a blog specified and proven in <a href=""https://coq.inria.fr/"">Coq</a>. The sources are on <a href=""https://github.com/clarus/coq-micro-blog"">GitHub</a>.</p>
-<ul>
-  <li>a test to parse the arguments:  <a href=""args?bla=12,13&bli="">/args?bla=12,13&amp;bli=</a></li>
-</ul>
 
 <h2>Posts</h2>
 <ul>" ++
@@ -118,17 +115,6 @@ Module Content.
       "The post could not be updated.") ++
     LString.s "<p>
 <p><a href=""show"">Back to the post.</a></p>".
-
-  Definition args (args : Http.Arguments.t) : LString.t :=
-    let args := args |> List.map (fun (arg : _ * _) =>
-      let (name, values) := arg in
-      LString.s "<dt>" ++ name ++ LString.s "</dt><dd>" ++
-      LString.join (LString.s ", ") values ++ LString.s "</dd>") in
-    LString.s "<h1>Arguments</h1>
-<dl class=""dl-horizontal"">
-" ++ LString.join [LString.Char.n] args ++
-    LString.s "
-</dl>".
 End Content.
 
 Definition pack (root : LString.t) (content : LString.t) : LString.t :=
@@ -142,5 +128,4 @@ Definition content (answer : Http.Answer.t) : LString.t :=
   | Http.Answer.PostShow post => pack (LString.s "../../") @@ Content.post_show post
   | Http.Answer.PostEdit post => pack (LString.s "../../") @@ Content.post_edit post
   | Http.Answer.PostUpdate is_success => pack (LString.s "../../") @@ Content.post_update is_success
-  | Http.Answer.Args args => pack (LString.s "") @@ Content.args args
   end.

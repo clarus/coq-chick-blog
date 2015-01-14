@@ -103,10 +103,6 @@ Module Controller.
       end
     | _ => C.Ret @@ Http.Answer.PostUpdate false
     end.
-
-  Definition args (args : Http.Arguments.t)
-    : C.t Http.Answer.t :=
-    C.Ret @@ Http.Answer.Args args.
 End Controller.
 
 Definition server (request : Http.Request.t) : C.t Http.Answer.t :=
@@ -125,7 +121,6 @@ Definition server (request : Http.Request.t) : C.t Http.Answer.t :=
       | "update" => Controller.post_update post_url args
       | _ => Controller.error
       end
-    | ["args"] => Controller.args args
     | _ => Controller.error
     end
   end.
