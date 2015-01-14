@@ -36,8 +36,7 @@ Module Controller.
     let! content := Command.ReadFile file_name in
     match content with
     | None => error
-    | Some content => C.Ret @@ Http.Answer.Success false @@
-      Http.Answer.Content.Static mime_type content
+    | Some content => C.Ret @@ Http.Answer.Static mime_type content
     end.
 
   Definition index : C.t Http.Answer.t :=
@@ -50,6 +49,12 @@ Module Controller.
     | Some posts => C.Ret @@ Http.Answer.Success false @@
       Http.Answer.Content.Index posts
     end.
+
+  Definition login : C.t Http.Answer.t :=
+    C.Ret Http.Answer.Login.
+
+  Definition logout : C.t Http.Answer.t :=
+    C.Ret Http.Answer.Logout.
 
   Definition post_show (post_url : LString.t) : C.t Http.Answer.t :=
     let! posts := Command.ListPosts posts_directory in
@@ -115,6 +120,8 @@ Definition server (request : Http.Request.t) : C.t Http.Answer.t :=
     match path with
     | "static" :: _ => Controller.static (List.map LString.s path)
     | [] => Controller.index
+    | ["login"] => Controller.login
+    | ["logout"] => Controller.logout
     | ["posts"; post_url; command] =>
       let post_url := LString.s post_url in
       match command with

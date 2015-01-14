@@ -26,7 +26,6 @@ End Request.
 Module Answer.
   Module Content.
     Inductive t :=
-    | Static (mime_type : LString.t) (content : LString.t)
     | Index (posts : list Post.Header.t)
     | PostShow (post : option Post.t)
     | PostEdit (post : option Post.t)
@@ -35,5 +34,7 @@ Module Answer.
 
   Inductive t :=
   | Error
+  | Static (mime_type : LString.t) (content : LString.t)
+  | Login | Logout
   | Success (is_logged : bool) (content : Content.t).
 End Answer.

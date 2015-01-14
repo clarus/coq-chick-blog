@@ -8,7 +8,7 @@ Require Import Model.
 Import ListNotations.
 Local Open Scope char.
 
-Definition header (root : LString.t) (is_logged : bool) : LString.t :=
+Definition header (root : LString.t) (is_logged : option bool) : LString.t :=
   LString.s "<!DOCTYPE html>
 <html lang=""en"">
   <head>
@@ -29,7 +29,10 @@ Definition header (root : LString.t) (is_logged : bool) : LString.t :=
       <div class=""navbar navbar-default"" role=""navigation"">
         <div class=""navbar-header"">
           <a class=""navbar-brand"" href=""/" ++ root ++ LString.s """>ChickBlog</a>
-        </div>
+        </div>" ++
+  match is_logged with
+  | None => LString.s ""
+  | Some is_logged => LString.s "
         <div class=""collapse navbar-collapse"" id=""bs-example-navbar-collapse-1"">
           <ul class=""nav navbar-nav navbar-right"">
             <li><a href=""" ++ root ++
@@ -37,7 +40,8 @@ Definition header (root : LString.t) (is_logged : bool) : LString.t :=
   LString.s (if is_logged then "Logout" else "Login") ++
   LString.s "</a></li>
           </ul>
-        </div>
+        </div>"
+  end ++ LString.s "
       </div>
       <div class=""article"">
         <div class=""row"">
@@ -66,7 +70,7 @@ Definition footer : LString.t :=
 
 Definition mime_type (answer : Http.Answer.t) : LString.t :=
   match answer with
-  | Http.Answer.Success _ (Http.Answer.Content.Static mime_type _) => mime_type
+  | Http.Answer.Static mime_type _ => mime_type
   | _ => LString.s "text/html; charset=utf-8"
   end.
 
@@ -78,6 +82,12 @@ Definition date (post_header : Post.Header.t) : LString.t :=
 Module Content.
   Definition error : LString.t :=
     LString.s "<p>Error.</p>".
+
+  Definition login : LString.t :=
+    LString.s "<p>Login: TODO.</p>".
+
+  Definition logout : LString.t :=
+    LString.s "<p>Logout: TODO.</p>".
 
   Definition index (posts : list Post.Header.t) : LString.t :=
     LString.s "<h1>Welcome</h1>
@@ -125,23 +135,25 @@ Module Content.
 <p><a href=""show"">Back to the post.</a></p>".
 End Content.
 
-Definition pack (root : LString.t) (is_logged : bool) (content : LString.t)
-  : LString.t :=
+Definition pack (root : LString.t) (is_logged : option bool)
+  (content : LString.t) : LString.t :=
   header root is_logged ++ content ++ footer.
 
 Definition content (answer : Http.Answer.t) : LString.t :=
   match answer with
   | Http.Answer.Error => Content.error
+  | Http.Answer.Static _ content => content
+  | Http.Answer.Login => pack (LString.s "") None Content.login
+  | Http.Answer.Logout => pack (LString.s "") None Content.logout
   | Http.Answer.Success is_logged content =>
     match content with
-    | Http.Answer.Content.Static _ content => content
     | Http.Answer.Content.Index posts =>
-      pack (LString.s "") is_logged @@ Content.index posts
+      pack (LString.s "") (Some is_logged) @@ Content.index posts
     | Http.Answer.Content.PostShow post =>
-      pack (LString.s "../../") is_logged @@ Content.post_show post
+      pack (LString.s "../../") (Some is_logged) @@ Content.post_show post
     | Http.Answer.Content.PostEdit post =>
-      pack (LString.s "../../") is_logged @@ Content.post_edit post
+      pack (LString.s "../../") (Some is_logged) @@ Content.post_edit post
     | Http.Answer.Content.PostUpdate is_success =>
-      pack (LString.s "../../") is_logged @@ Content.post_update is_success
+      pack (LString.s "../../") (Some is_logged) @@ Content.post_update is_success
     end
   end.
