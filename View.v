@@ -28,7 +28,7 @@ Definition header (root : LString.t) : LString.t :=
     <div class=""container-fluid"">
       <div class=""navbar navbar-default"" role=""navigation"">
         <div class=""navbar-header"">
-          <a class=""navbar-brand"" href=""" ++ root ++ LString.s """>MicroBlog</a>
+          <a class=""navbar-brand"" href=""/" ++ root ++ LString.s """>MicroBlog</a>
         </div>
       </div>
       <div class=""article"">
@@ -69,7 +69,7 @@ Definition date (post_header : Post.Header.t) : LString.t :=
 
 Module Content.
   Definition error : LString.t :=
-    LString.s "<h1>Error</h1>".
+    LString.s "<p>Error.</p>".
 
   Definition index (posts : list Post.Header.t) : LString.t :=
     LString.s "<h1>Welcome</h1>
