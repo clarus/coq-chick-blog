@@ -31,9 +31,6 @@ Module BigInt.
 
   (** Export to a `Z`. *)
   Definition to_Z : t -> Z := z_of_bigint.
-
-  (** Import from a `Z`. *)
-  Definition of_Z : Z -> t := bigint_of_z.
 End BigInt.
 
 Module Lwt.
