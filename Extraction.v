@@ -53,12 +53,7 @@ Module Lwt.
   Extract Constant printl => "Lwt_io.printl".
 
   Parameter read_file : String.t -> t (option String.t).
-  Extract Constant read_file => "fun file_name ->
-    Lwt.catch (fun _ ->
-      Lwt.bind (Lwt_io.open_file Lwt_io.Input file_name) (fun channel ->
-      Lwt.bind (Lwt_io.read channel) (fun content ->
-      Lwt.return @@ Some content)))
-      (fun _ -> Lwt.return None)".
+  Extract Constant read_file => "Utils.read_file".
 
   Parameter list_files : String.t -> t (option (list String.t)).
   Extract Constant list_files => "Utils.list_files".
