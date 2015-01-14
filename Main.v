@@ -30,7 +30,7 @@ Module Controller.
   Definition static (path : list LString.t) : C.t Http.Answer.t :=
     let mime_type := mime_type @@ List.last path (LString.s "") in
     let file_name := LString.join (LString.s "/") path in
-    let! content := Command.FileRead file_name in
+    let! content := Command.ReadFile file_name in
     match content with
     | None => error
     | Some content => C.Ret @@ Http.Answer.Static mime_type content
