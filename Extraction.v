@@ -1,3 +1,5 @@
+Require Import Coq.Lists.List.
+Require Import Coq.ZArith.ZArith.
 Require Import ExtrOcamlBasic.
 Require Import ExtrOcamlBigIntConv.
 Require Import ExtrOcamlString.
@@ -9,6 +11,8 @@ Require Http.
 Require Import Model.
 Require View.
 
+Import ListNotations.
+
 Module String.
   Parameter t : Type.
   Extract Constant t => "string".
@@ -19,6 +23,18 @@ Module String.
   Parameter to_lstring : t -> LString.t.
   Extract Constant to_lstring => "OCaml.String.to_lstring".
 End String.
+
+(** Unbounded integers. *)
+Module BigInt.
+  (** The OCaml's `bigint` type. *)
+  Definition t : Type := bigint.
+
+  (** Export to a `Z`. *)
+  Definition to_Z : t -> Z := z_of_bigint.
+
+  (** Import from a `Z`. *)
+  Definition of_Z : Z -> t := bigint_of_z.
+End BigInt.
 
 Module Lwt.
   Parameter t : Type -> Type.
@@ -45,13 +61,22 @@ Module Lwt.
       (fun _ -> Lwt.return None)".
 
   Parameter list_files : String.t -> t (option (list String.t)).
-  Extract Constant list_files => "fun directory ->
-    Lwt.catch (fun _ ->
-      let files = Lwt_unix.files_of_directory directory in
-      Lwt.bind (Lwt_stream.to_list files) (fun files ->
-      Lwt.return @@ Some files))
-      (fun _ -> Lwt.return None)".
+  Extract Constant list_files => "Utils.list_files".
 End Lwt.
+
+Definition list_posts (directory : LString.t)
+  : Lwt.t (option (list Post.Header.t)) :=
+  Lwt.bind (Lwt.list_files @@ String.of_lstring directory) (fun file_names =>
+  Lwt.ret @@ file_names |> option_map (fun file_names =>
+  let posts := file_names |> List.map (fun file_name =>
+    Post.Header.of_file_name @@ String.to_lstring file_name) in
+  (* We removed the elements `None`. *)
+  List.fold_left (fun posts post =>
+    match post with
+    | None => posts
+    | Some post => post :: posts
+    end)
+    posts [])).
 
 Fixpoint eval {A : Type} (x : C.t A) : Lwt.t A :=
   match x with
@@ -60,11 +85,8 @@ Fixpoint eval {A : Type} (x : C.t A) : Lwt.t A :=
     let file_name := String.of_lstring file_name in
     Lwt.bind (Lwt.read_file file_name) (fun content =>
     eval @@ handler @@ option_map String.to_lstring content)
-  | C.Let (Command.ListFiles directory) handler =>
-    let directory := String.of_lstring directory in
-    Lwt.bind (Lwt.list_files directory) (fun files =>
-    let files := files |> option_map (fun files => files |> List.map String.to_lstring) in
-    eval @@ handler files)
+  | C.Let (Command.ListPosts directory) handler =>
+    eval @@ handler None
   | C.Let (Command.Log message) handler =>
     let message := String.of_lstring message in
     Lwt.bind (Lwt.printl message) (fun _ =>

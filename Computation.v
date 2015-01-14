@@ -7,13 +7,13 @@ Local Open Scope type.
 Module Command.
   Inductive t :=
   | FileRead (file_name : LString.t)
-  | ListFiles (directory : LString.t)
+  | ListPosts (directory : LString.t)
   | Log (message : LString.t).
 
   Definition answer (command : t) : Type :=
     match command with
     | FileRead _ => option LString.t
-    | ListFiles _ => option (list LString.t)
+    | ListPosts _ => option (list Post.Header.t)
     | Log _ => unit
     end.
 End Command.

@@ -38,22 +38,13 @@ Module Controller.
 
   Definition index : C.t Http.Answer.t :=
     let directory := LString.s "posts/" in
-    let! file_names := Command.ListFiles directory in
-    match file_names with
+    let! posts := Command.ListPosts directory in
+    match posts with
     | None =>
       do! Command.Log (LString.s "Cannot open the " ++ directory ++
         LString.s " directory") in
       C.Ret @@ Http.Answer.Index []
-    | Some file_names =>
-      let posts := file_names |> List.map Post.Header.of_file_name in
-      (* We removed the elements `None`. *)
-      let posts := List.fold_left (fun posts post =>
-        match post with
-        | None => posts
-        | Some post => post :: posts
-        end)
-        posts [] in
-      C.Ret @@ Http.Answer.Index posts
+    | Some posts => C.Ret @@ Http.Answer.Index posts
     end.
 
   Definition args (args : list (LString.t * list LString.t))
