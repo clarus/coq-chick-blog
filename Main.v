@@ -39,14 +39,14 @@ Module Controller.
     | Some content => C.Ret @@ Http.Answer.Static mime_type content
     end.
 
-  Definition index : C.t Http.Answer.t :=
+  Definition index (is_logged : bool) : C.t Http.Answer.t :=
     let! posts := Command.ListPosts posts_directory in
     match posts with
     | None =>
       do! Command.Log (LString.s "Cannot open the " ++ posts_directory ++
         LString.s " directory.") in
-      C.Ret @@ Http.Answer.Success false @@ Http.Answer.Content.Index []
-    | Some posts => C.Ret @@ Http.Answer.Success false @@
+      C.Ret @@ Http.Answer.Success is_logged @@ Http.Answer.Content.Index []
+    | Some posts => C.Ret @@ Http.Answer.Success is_logged @@
       Http.Answer.Content.Index posts
     end.
 
@@ -56,59 +56,59 @@ Module Controller.
   Definition logout : C.t Http.Answer.t :=
     C.Ret Http.Answer.Logout.
 
-  Definition post_show (post_url : LString.t) : C.t Http.Answer.t :=
+  Definition post_show (is_logged : bool) (post_url : LString.t) : C.t Http.Answer.t :=
     let! posts := Command.ListPosts posts_directory in
     match posts with
-    | None => C.Ret @@ Http.Answer.Success false @@ Http.Answer.Content.PostShow None
+    | None => C.Ret @@ Http.Answer.Success is_logged @@ Http.Answer.Content.PostShow None
     | Some posts =>
       let header := posts |> List.find (fun post =>
         LString.eqb (Post.Header.url post) post_url) in
       match header with
-      | None => C.Ret @@ Http.Answer.Success false @@ Http.Answer.Content.PostShow None
+      | None => C.Ret @@ Http.Answer.Success is_logged @@ Http.Answer.Content.PostShow None
       | Some header =>
         let file_name := posts_directory ++ Post.Header.file_name header in
         let! content := Command.ReadFile file_name in
         let post := content |> option_map (Post.New header) in
-        C.Ret @@ Http.Answer.Success false @@ Http.Answer.Content.PostShow post
+        C.Ret @@ Http.Answer.Success is_logged @@ Http.Answer.Content.PostShow post
       end
     end.
 
-  Definition post_edit (post_url : LString.t) : C.t Http.Answer.t :=
+  Definition post_edit (is_logged : bool) (post_url : LString.t) : C.t Http.Answer.t :=
     let! posts := Command.ListPosts posts_directory in
     match posts with
-    | None => C.Ret @@ Http.Answer.Success false @@ Http.Answer.Content.PostEdit None
+    | None => C.Ret @@ Http.Answer.Success is_logged @@ Http.Answer.Content.PostEdit None
     | Some posts =>
       let header := posts |> List.find (fun post =>
         LString.eqb (Post.Header.url post) post_url) in
       match header with
-      | None => C.Ret @@ Http.Answer.Success false @@ Http.Answer.Content.PostEdit None
+      | None => C.Ret @@ Http.Answer.Success is_logged @@ Http.Answer.Content.PostEdit None
       | Some header =>
         let file_name := posts_directory ++ Post.Header.file_name header in
         let! content := Command.ReadFile file_name in
         let post := content |> option_map (Post.New header) in
-        C.Ret @@ Http.Answer.Success false @@ Http.Answer.Content.PostEdit post
+        C.Ret @@ Http.Answer.Success is_logged @@ Http.Answer.Content.PostEdit post
       end
     end.
 
-  Definition post_update (post_url : LString.t) (args : Http.Arguments.t)
+  Definition post_update (is_logged : bool) (post_url : LString.t) (args : Http.Arguments.t)
     : C.t Http.Answer.t :=
     match Http.Arguments.find args @@ LString.s "content" with
     | Some [content] =>
       let! posts := Command.ListPosts posts_directory in
       match posts with
-      | None => C.Ret @@ Http.Answer.Success false @@ Http.Answer.Content.PostUpdate false
+      | None => C.Ret @@ Http.Answer.Success is_logged @@ Http.Answer.Content.PostUpdate false
       | Some posts =>
         let header := posts |> List.find (fun post =>
           LString.eqb (Post.Header.url post) post_url) in
         match header with
-        | None => C.Ret @@ Http.Answer.Success false @@ Http.Answer.Content.PostUpdate false
+        | None => C.Ret @@ Http.Answer.Success is_logged @@ Http.Answer.Content.PostUpdate false
         | Some header =>
           let file_name := posts_directory ++ Post.Header.file_name header in
           let! is_success := Command.UpdateFile file_name content in
-          C.Ret @@ Http.Answer.Success false @@ Http.Answer.Content.PostUpdate is_success
+          C.Ret @@ Http.Answer.Success is_logged @@ Http.Answer.Content.PostUpdate is_success
         end
       end
-    | _ => C.Ret @@ Http.Answer.Success false @@ Http.Answer.Content.PostUpdate false
+    | _ => C.Ret @@ Http.Answer.Success is_logged @@ Http.Answer.Content.PostUpdate false
     end.
 End Controller.
 
@@ -117,17 +117,18 @@ Definition server (request : Http.Request.t) : C.t Http.Answer.t :=
   | Http.Request.Get path args cookies =>
     do! Command.Log (LString.s "GET /" ++ LString.join (LString.s "/") path) in
     let path := List.map LString.to_string path in
+    let is_logged := Http.Cookies.is_logged cookies in
     match path with
     | "static" :: _ => Controller.static (List.map LString.s path)
-    | [] => Controller.index
+    | [] => Controller.index is_logged
     | ["login"] => Controller.login
     | ["logout"] => Controller.logout
     | ["posts"; post_url; command] =>
       let post_url := LString.s post_url in
       match command with
-      | "show" => Controller.post_show post_url
-      | "edit" => Controller.post_edit post_url
-      | "update" => Controller.post_update post_url args
+      | "show" => Controller.post_show is_logged post_url
+      | "edit" => Controller.post_edit is_logged post_url
+      | "update" => Controller.post_update is_logged post_url args
       | _ => Controller.error
       end
     | _ => Controller.error

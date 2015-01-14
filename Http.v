@@ -1,4 +1,5 @@
 Require Import Coq.Lists.List.
+Require Import FunctionNinjas.All.
 Require Import ListString.All.
 Require Import Model.
 
@@ -20,6 +21,16 @@ End Arguments.
 
 Module Cookies.
   Definition t := list (LString.t * LString.t).
+
+  Fixpoint is_logged (cookies : t) : bool :=
+    match cookies with
+    | [] => false
+    | (key, val) :: cookies =>
+      if LString.eqb key @@ LString.s "is_logged" then
+        LString.eqb val @@ LString.s "true"
+      else
+        is_logged cookies
+    end.
 End Cookies.
 
 Module Request.
