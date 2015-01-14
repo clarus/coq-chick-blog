@@ -8,7 +8,7 @@ Require Import Model.
 Import ListNotations.
 Local Open Scope char.
 
-Definition header (root : LString.t) : LString.t :=
+Definition header (root : LString.t) (is_logged : bool) : LString.t :=
   LString.s "<!DOCTYPE html>
 <html lang=""en"">
   <head>
@@ -29,6 +29,14 @@ Definition header (root : LString.t) : LString.t :=
       <div class=""navbar navbar-default"" role=""navigation"">
         <div class=""navbar-header"">
           <a class=""navbar-brand"" href=""/" ++ root ++ LString.s """>MicroBlog</a>
+        </div>
+        <div class=""collapse navbar-collapse"" id=""bs-example-navbar-collapse-1"">
+          <ul class=""nav navbar-nav navbar-right"">
+            <li><a href=""" ++ root ++
+  LString.s (if is_logged then "logout" else "login") ++ LString.s """>" ++
+  LString.s (if is_logged then "Logout" else "Login") ++
+  LString.s "</a></li>
+          </ul>
         </div>
       </div>
       <div class=""article"">
@@ -58,7 +66,7 @@ Definition footer : LString.t :=
 
 Definition mime_type (answer : Http.Answer.t) : LString.t :=
   match answer with
-  | Http.Answer.Static mime_type _ => mime_type
+  | Http.Answer.Success _ (Http.Answer.Content.Static mime_type _) => mime_type
   | _ => LString.s "text/html; charset=utf-8"
   end.
 
@@ -117,15 +125,23 @@ Module Content.
 <p><a href=""show"">Back to the post.</a></p>".
 End Content.
 
-Definition pack (root : LString.t) (content : LString.t) : LString.t :=
-  header root ++ content ++ footer.
+Definition pack (root : LString.t) (is_logged : bool) (content : LString.t)
+  : LString.t :=
+  header root is_logged ++ content ++ footer.
 
 Definition content (answer : Http.Answer.t) : LString.t :=
   match answer with
   | Http.Answer.Error => Content.error
-  | Http.Answer.Static _ content => content
-  | Http.Answer.Index posts => pack (LString.s "") @@ Content.index posts
-  | Http.Answer.PostShow post => pack (LString.s "../../") @@ Content.post_show post
-  | Http.Answer.PostEdit post => pack (LString.s "../../") @@ Content.post_edit post
-  | Http.Answer.PostUpdate is_success => pack (LString.s "../../") @@ Content.post_update is_success
+  | Http.Answer.Success is_logged content =>
+    match content with
+    | Http.Answer.Content.Static _ content => content
+    | Http.Answer.Content.Index posts =>
+      pack (LString.s "") is_logged @@ Content.index posts
+    | Http.Answer.Content.PostShow post =>
+      pack (LString.s "../../") is_logged @@ Content.post_show post
+    | Http.Answer.Content.PostEdit post =>
+      pack (LString.s "../../") is_logged @@ Content.post_edit post
+    | Http.Answer.Content.PostUpdate is_success =>
+      pack (LString.s "../../") is_logged @@ Content.post_update is_success
+    end
   end.

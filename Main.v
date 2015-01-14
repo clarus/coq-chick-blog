@@ -36,7 +36,8 @@ Module Controller.
     let! content := Command.ReadFile file_name in
     match content with
     | None => error
-    | Some content => C.Ret @@ Http.Answer.Static mime_type content
+    | Some content => C.Ret @@ Http.Answer.Success false @@
+      Http.Answer.Content.Static mime_type content
     end.
 
   Definition index : C.t Http.Answer.t :=
@@ -45,41 +46,42 @@ Module Controller.
     | None =>
       do! Command.Log (LString.s "Cannot open the " ++ posts_directory ++
         LString.s " directory.") in
-      C.Ret @@ Http.Answer.Index []
-    | Some posts => C.Ret @@ Http.Answer.Index posts
+      C.Ret @@ Http.Answer.Success false @@ Http.Answer.Content.Index []
+    | Some posts => C.Ret @@ Http.Answer.Success false @@
+      Http.Answer.Content.Index posts
     end.
 
   Definition post_show (post_url : LString.t) : C.t Http.Answer.t :=
     let! posts := Command.ListPosts posts_directory in
     match posts with
-    | None => C.Ret @@ Http.Answer.PostShow None
+    | None => C.Ret @@ Http.Answer.Success false @@ Http.Answer.Content.PostShow None
     | Some posts =>
       let header := posts |> List.find (fun post =>
         LString.eqb (Post.Header.url post) post_url) in
       match header with
-      | None => C.Ret @@ Http.Answer.PostShow None
+      | None => C.Ret @@ Http.Answer.Success false @@ Http.Answer.Content.PostShow None
       | Some header =>
         let file_name := posts_directory ++ Post.Header.file_name header in
         let! content := Command.ReadFile file_name in
         let post := content |> option_map (Post.New header) in
-        C.Ret @@ Http.Answer.PostShow post
+        C.Ret @@ Http.Answer.Success false @@ Http.Answer.Content.PostShow post
       end
     end.
 
   Definition post_edit (post_url : LString.t) : C.t Http.Answer.t :=
     let! posts := Command.ListPosts posts_directory in
     match posts with
-    | None => C.Ret @@ Http.Answer.PostEdit None
+    | None => C.Ret @@ Http.Answer.Success false @@ Http.Answer.Content.PostEdit None
     | Some posts =>
       let header := posts |> List.find (fun post =>
         LString.eqb (Post.Header.url post) post_url) in
       match header with
-      | None => C.Ret @@ Http.Answer.PostEdit None
+      | None => C.Ret @@ Http.Answer.Success false @@ Http.Answer.Content.PostEdit None
       | Some header =>
         let file_name := posts_directory ++ Post.Header.file_name header in
         let! content := Command.ReadFile file_name in
         let post := content |> option_map (Post.New header) in
-        C.Ret @@ Http.Answer.PostEdit post
+        C.Ret @@ Http.Answer.Success false @@ Http.Answer.Content.PostEdit post
       end
     end.
 
@@ -89,19 +91,19 @@ Module Controller.
     | Some [content] =>
       let! posts := Command.ListPosts posts_directory in
       match posts with
-      | None => C.Ret @@ Http.Answer.PostUpdate false
+      | None => C.Ret @@ Http.Answer.Success false @@ Http.Answer.Content.PostUpdate false
       | Some posts =>
         let header := posts |> List.find (fun post =>
           LString.eqb (Post.Header.url post) post_url) in
         match header with
-        | None => C.Ret @@ Http.Answer.PostUpdate false
+        | None => C.Ret @@ Http.Answer.Success false @@ Http.Answer.Content.PostUpdate false
         | Some header =>
           let file_name := posts_directory ++ Post.Header.file_name header in
           let! is_success := Command.UpdateFile file_name content in
-          C.Ret @@ Http.Answer.PostUpdate is_success
+          C.Ret @@ Http.Answer.Success false @@ Http.Answer.Content.PostUpdate is_success
         end
       end
-    | _ => C.Ret @@ Http.Answer.PostUpdate false
+    | _ => C.Ret @@ Http.Answer.Success false @@ Http.Answer.Content.PostUpdate false
     end.
 End Controller.
 
