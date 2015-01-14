@@ -42,7 +42,7 @@ Module Controller.
     match posts with
     | None =>
       do! Command.Log (LString.s "Cannot open the " ++ directory ++
-        LString.s " directory") in
+        LString.s " directory.") in
       C.Ret @@ Http.Answer.Index []
     | Some posts => C.Ret @@ Http.Answer.Index posts
     end.
