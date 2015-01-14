@@ -24,4 +24,4 @@ Compile:
 
 Run on [localhost:8008](http://localhost:8008/):
 
-    ./microBlog.native
+    ./chickBlog.native

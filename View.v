@@ -56,7 +56,7 @@ Definition footer : LString.t :=
       <hr/>
       <div class=""footer"">
         <p class=""text-center"">
-          <small>Sources are on <a href=""https://github.com/clarus/coq-micro-blog"">GitHub</a>. © Guillaume Claret</small>
+          <small>Sources are on <a href=""https://github.com/clarus/coq-chick-blog"">GitHub</a>. © Guillaume Claret</small>
         </p>
       </div>
     </div>
@@ -81,7 +81,7 @@ Module Content.
 
   Definition index (posts : list Post.Header.t) : LString.t :=
     LString.s "<h1>Welcome</h1>
-<p>This is a blog written and proven in <a href=""https://coq.inria.fr/"">Coq</a>. The sources are on <a href=""https://github.com/clarus/coq-micro-blog"">GitHub</a>.</p>
+<p>This is a blog written and proven in <a href=""https://coq.inria.fr/"">Coq</a>. The sources are on <a href=""https://github.com/clarus/coq-chick-blog"">GitHub</a>.</p>
 
 <h2>Posts</h2>
 <ul>" ++

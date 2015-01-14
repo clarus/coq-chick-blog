@@ -129,4 +129,4 @@ Definition server (request : Http.Request.t) : C.t Http.Answer.t :=
 
 Require Extraction.
 Definition main := Extraction.main server.
-Extraction "extraction/microBlog" main.
+Extraction "extraction/chickBlog" main.
