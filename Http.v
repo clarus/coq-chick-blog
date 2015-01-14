@@ -11,6 +11,6 @@ Module Answer.
   | Error
   | Static (mime_type : LString.t) (content : LString.t)
   | Index (posts : list Post.Header.t)
-  | Post (post : option Post.t)
+  | PostContent (post : option Post.t)
   | Args (args : list (LString.t * list LString.t)).
 End Answer.

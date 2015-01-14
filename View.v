@@ -80,16 +80,16 @@ Module Content.
 <h2>Posts</h2>
 <ul>" ++
   LString.join [LString.Char.n] (posts |> List.map (fun post =>
-    LString.s "<li><a href=""posts/" ++ Post.Header.url post ++ LString.s """>" ++
+    LString.s "<li><a href=""posts/" ++ Post.Header.url post ++ LString.s "/show"">" ++
     Post.Header.title post ++ LString.s "</a> " ++ date post ++ LString.s "</li>")) ++
   LString.s "</ul>".
 
-  Definition post (post : option Post.t) : LString.t :=
+  Definition post_content (post : option Post.t) : LString.t :=
     match post with
     | None => LString.s "<p>Post not found.</p>"
     | Some post =>
       let header := Post.header post in
-      LString.s "<h1>" ++ Post.Header.title header ++ LString.s "</h1>
+      LString.s "<h1>" ++ Post.Header.title header ++ LString.s " <small><a href=""edit"">edit</a></small></h1>
 <p><em>" ++ date header ++ LString.s "</em></p>
 " ++ Post.content post
     end.
@@ -111,9 +111,9 @@ Definition pack (root : LString.t) (content : LString.t) : LString.t :=
 
 Definition content (answer : Http.Answer.t) : LString.t :=
   match answer with
-  | Http.Answer.Error => pack (LString.s "") Content.error
+  | Http.Answer.Error => Content.error
   | Http.Answer.Static _ content => content
   | Http.Answer.Index posts => pack (LString.s "") @@ Content.index posts
-  | Http.Answer.Post post => pack (LString.s "../") @@ Content.post post
+  | Http.Answer.PostContent post => pack (LString.s "../../") @@ Content.post_content post
   | Http.Answer.Args args => pack (LString.s "") @@ Content.args args
   end.
