@@ -49,20 +49,37 @@ Module Controller.
     | Some posts => C.Ret @@ Http.Answer.Index posts
     end.
 
-  Definition post (post_url : LString.t) : C.t Http.Answer.t :=
+  Definition post_show (post_url : LString.t) : C.t Http.Answer.t :=
     let! posts := Command.ListPosts posts_directory in
     match posts with
-    | None => C.Ret @@ Http.Answer.PostContent None
+    | None => C.Ret @@ Http.Answer.PostShow None
     | Some posts =>
       let header := posts |> List.find (fun post =>
         LString.eqb (Post.Header.url post) post_url) in
       match header with
-      | None => C.Ret @@ Http.Answer.PostContent None
+      | None => C.Ret @@ Http.Answer.PostShow None
       | Some header =>
         let! content :=
           Command.ReadPost (posts_directory ++ Post.Header.file_name header) in
         let post := content |> option_map (Post.New header) in
-        C.Ret @@ Http.Answer.PostContent post
+        C.Ret @@ Http.Answer.PostShow post
+      end
+    end.
+
+  Definition post_edit (post_url : LString.t) : C.t Http.Answer.t :=
+    let! posts := Command.ListPosts posts_directory in
+    match posts with
+    | None => C.Ret @@ Http.Answer.PostEdit None
+    | Some posts =>
+      let header := posts |> List.find (fun post =>
+        LString.eqb (Post.Header.url post) post_url) in
+      match header with
+      | None => C.Ret @@ Http.Answer.PostEdit None
+      | Some header =>
+        let! content :=
+          Command.ReadPost (posts_directory ++ Post.Header.file_name header) in
+        let post := content |> option_map (Post.New header) in
+        C.Ret @@ Http.Answer.PostEdit post
       end
     end.
 
@@ -79,7 +96,8 @@ Definition server (request : Http.Request.t) : C.t Http.Answer.t :=
     match path with
     | "static" :: _ => Controller.static (List.map LString.s path)
     | [] => Controller.index
-    | ["posts"; post_url; "show"] => Controller.post @@ LString.s post_url
+    | ["posts"; post_url; "show"] => Controller.post_show @@ LString.s post_url
+    | ["posts"; post_url; "edit"] => Controller.post_edit @@ LString.s post_url
     | ["args"] => Controller.args args
     | _ => Controller.error
     end

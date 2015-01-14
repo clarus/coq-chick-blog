@@ -84,7 +84,7 @@ Module Content.
     Post.Header.title post ++ LString.s "</a> " ++ date post ++ LString.s "</li>")) ++
   LString.s "</ul>".
 
-  Definition post_content (post : option Post.t) : LString.t :=
+  Definition post_show (post : option Post.t) : LString.t :=
     match post with
     | None => LString.s "<p>Post not found.</p>"
     | Some post =>
@@ -92,6 +92,16 @@ Module Content.
       LString.s "<h1>" ++ Post.Header.title header ++ LString.s " <small><a href=""edit"">edit</a></small></h1>
 <p><em>" ++ date header ++ LString.s "</em></p>
 " ++ Post.content post
+    end.
+
+  Definition post_edit (post : option Post.t) : LString.t :=
+    match post with
+    | None => LString.s "<p>Post not found.</p>"
+    | Some post =>
+      let header := Post.header post in
+      LString.s "<h1>" ++ Post.Header.title header ++ LString.s "</h1>
+<p><em>" ++ date header ++ LString.s "</em></p>
+<textarea class=""form-control"" rows=""3"">" ++ Post.content post ++ LString.s "</textarea>"
     end.
 
   Definition args (args : list (LString.t * list LString.t)) : LString.t :=
@@ -114,6 +124,7 @@ Definition content (answer : Http.Answer.t) : LString.t :=
   | Http.Answer.Error => Content.error
   | Http.Answer.Static _ content => content
   | Http.Answer.Index posts => pack (LString.s "") @@ Content.index posts
-  | Http.Answer.PostContent post => pack (LString.s "../../") @@ Content.post_content post
+  | Http.Answer.PostShow post => pack (LString.s "../../") @@ Content.post_show post
+  | Http.Answer.PostEdit post => pack (LString.s "../../") @@ Content.post_edit post
   | Http.Answer.Args args => pack (LString.s "") @@ Content.args args
   end.
