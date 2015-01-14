@@ -36,20 +36,38 @@ Module Post.
           "-" :: to_url title
       end.
 
+    (** Eat one dash at the beginning of the string. *)
+    Definition eat_dash (s : LString.t) : option LString.t :=
+      match s with
+      | "-" :: s => Some s
+      | _ => None
+      end.
+
+    (** Eat zero, one or many spaces at the beginning of the string. *)
+    Fixpoint eat_spaces (s : LString.t) : LString.t :=
+      match s with
+      | " " :: s => eat_spaces s
+      | _ => s
+      end.
+
     Definition of_file_name (file_name : LString.t) : option t :=
       Option.bind (Date.Parse.zero_padded_year 4 file_name) (fun x =>
       let (year, file_name') := x in
+      Option.bind (eat_dash file_name') (fun file_name' =>
       Option.bind (Date.Parse.zero_padded_month file_name') (fun x =>
       let (month, file_name') := x in
+      Option.bind (eat_dash file_name') (fun file_name' =>
       Option.bind (Date.Parse.zero_padded_day file_name') (fun x =>
       let (day, file_name') := x in
       let date := Date.New year month day in
       let extension := List.last (LString.split file_name' ".") (LString.s "") in
       if LString.eqb extension @@ LString.s "md" then
-        let title := LString.join [] @@ List.removelast (LString.split file_name' ".") in
+        let title := List.removelast (LString.split file_name' ".")
+          |> LString.join []
+          |> eat_spaces in
         Some (New title date (to_url title) file_name)
       else
-        None))).
+        None))))).
   End Header.
 
   Record t := New {
