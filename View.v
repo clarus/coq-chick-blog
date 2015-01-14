@@ -8,14 +8,14 @@ Require Import Model.
 Import ListNotations.
 Local Open Scope char.
 
-Definition header : LString.t := LString.s
-"<!DOCTYPE html>
+Definition header (root : LString.t) : LString.t :=
+  LString.s "<!DOCTYPE html>
 <html lang=""en"">
   <head>
     <meta charset=""utf-8"">
     <meta name=""viewport"" content=""width=device-width, initial-scale=1"">
     <title>MicroBlog</title>
-    <link rel=""stylesheet"" href=""static/style.min.css"" type=""text/css"" />
+    <link rel=""stylesheet"" href=""" ++ root ++ LString.s "static/style.min.css"" type=""text/css"" />
 
     <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
     <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
@@ -38,8 +38,8 @@ Definition header : LString.t := LString.s
 
 ".
 
-Definition footer : LString.t := LString.s
-"
+Definition footer : LString.t :=
+  LString.s "
 
           </div>
           <div class=""col-md-1""></div>
@@ -78,9 +78,15 @@ Module Content.
     let date := Post.Header.date post in
     let date := Date.Print.full_month date ++ LString.s " " ++
       Date.Print.day None date ++ LString.s ", " ++ Date.Print.year 4 None date in
-    LString.s "<li><a href=""" ++ Post.Header.url post ++ LString.s """>" ++
+    LString.s "<li><a href=""posts/" ++ Post.Header.url post ++ LString.s """>" ++
     Post.Header.title post ++ LString.s "</a> " ++ date ++ LString.s "</li>")) ++
   LString.s "</ul>".
+
+  Definition post (post : option Post.t) : LString.t :=
+    match post with
+    | None => LString.s "<p>Post not found.</p>"
+    | Some post => LString.s "<p>TODO</p>"
+    end.
 
   Definition args (args : list (LString.t * list LString.t)) : LString.t :=
     let args := args |> List.map (fun (arg : _ * _) =>
@@ -94,13 +100,14 @@ Module Content.
 </dl>".
 End Content.
 
-Definition pack (content : LString.t) : LString.t :=
-  header ++ content ++ footer.
+Definition pack (root : LString.t) (content : LString.t) : LString.t :=
+  header root ++ content ++ footer.
 
 Definition content (answer : Http.Answer.t) : LString.t :=
   match answer with
-  | Http.Answer.Error => pack Content.error
+  | Http.Answer.Error => pack (LString.s "") Content.error
   | Http.Answer.Static _ content => content
-  | Http.Answer.Index posts => pack @@ Content.index posts
-  | Http.Answer.Args args => pack @@ Content.args args
+  | Http.Answer.Index posts => pack (LString.s "") @@ Content.index posts
+  | Http.Answer.Post post => pack (LString.s "../") @@ Content.post post
+  | Http.Answer.Args args => pack (LString.s "") @@ Content.args args
   end.

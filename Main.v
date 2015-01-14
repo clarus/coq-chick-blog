@@ -47,6 +47,9 @@ Module Controller.
     | Some posts => C.Ret @@ Http.Answer.Index posts
     end.
 
+  Definition post (post : LString.t) : C.t Http.Answer.t :=
+    C.Ret @@ Http.Answer.Post None.
+
   Definition args (args : list (LString.t * list LString.t))
     : C.t Http.Answer.t :=
     C.Ret @@ Http.Answer.Args args.
@@ -60,6 +63,7 @@ Definition server (request : Http.Request.t) : C.t Http.Answer.t :=
     match path with
     | "static" :: _ => Controller.static (List.map LString.s path)
     | [] => Controller.index
+    | ["posts"; post] => Controller.post @@ LString.s post
     | ["args"] => Controller.args args
     | _ => Controller.error
     end
