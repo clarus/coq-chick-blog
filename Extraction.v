@@ -74,12 +74,14 @@ Fixpoint eval {A : Type} (x : C.t A) : Lwt.t A :=
   match x with
   | C.Ret x => Lwt.ret x
   | C.Let (Command.ReadFile file_name) handler =>
-    let file_name := String.of_lstring file_name in
-    Lwt.bind (Lwt.read_file file_name) (fun content =>
+    Lwt.bind (Lwt.read_file @@ String.of_lstring file_name) (fun content =>
     eval @@ handler @@ option_map String.to_lstring content)
   | C.Let (Command.ListPosts directory) handler =>
     Lwt.bind (list_posts directory) (fun posts =>
     eval @@ handler posts)
+  | C.Let (Command.ReadPost file_name) handler =>
+    Lwt.bind (Lwt.read_file @@ String.of_lstring file_name) (fun content =>
+    eval @@ handler @@ option_map String.to_lstring content)
   | C.Let (Command.Log message) handler =>
     let message := String.of_lstring message in
     Lwt.bind (Lwt.printl message) (fun _ =>

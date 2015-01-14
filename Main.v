@@ -13,6 +13,9 @@ Local Open Scope string.
 Local Open Scope list.
 
 Module Controller.
+  Definition posts_directory : LString.t :=
+    LString.s "posts/".
+
   Definition error : C.t Http.Answer.t :=
     C.Ret Http.Answer.Error.
 
@@ -37,18 +40,31 @@ Module Controller.
     end.
 
   Definition index : C.t Http.Answer.t :=
-    let directory := LString.s "posts/" in
-    let! posts := Command.ListPosts directory in
+    let! posts := Command.ListPosts posts_directory in
     match posts with
     | None =>
-      do! Command.Log (LString.s "Cannot open the " ++ directory ++
+      do! Command.Log (LString.s "Cannot open the " ++ posts_directory ++
         LString.s " directory.") in
       C.Ret @@ Http.Answer.Index []
     | Some posts => C.Ret @@ Http.Answer.Index posts
     end.
 
-  Definition post (post : LString.t) : C.t Http.Answer.t :=
-    C.Ret @@ Http.Answer.Post None.
+  Definition post (post_url : LString.t) : C.t Http.Answer.t :=
+    let! posts := Command.ListPosts posts_directory in
+    match posts with
+    | None => C.Ret @@ Http.Answer.Post None
+    | Some posts =>
+      let header := posts |> List.find (fun post =>
+        LString.eqb (Post.Header.url post) post_url) in
+      match header with
+      | None => C.Ret @@ Http.Answer.Post None
+      | Some header =>
+        let! content :=
+          Command.ReadPost (posts_directory ++ Post.Header.file_name header) in
+        let post := content |> option_map (Post.New header) in
+        C.Ret @@ Http.Answer.Post post
+      end
+    end.
 
   Definition args (args : list (LString.t * list LString.t))
     : C.t Http.Answer.t :=
@@ -63,7 +79,7 @@ Definition server (request : Http.Request.t) : C.t Http.Answer.t :=
     match path with
     | "static" :: _ => Controller.static (List.map LString.s path)
     | [] => Controller.index
-    | ["posts"; post] => Controller.post @@ LString.s post
+    | ["posts"; post_url] => Controller.post @@ LString.s post_url
     | ["args"] => Controller.args args
     | _ => Controller.error
     end

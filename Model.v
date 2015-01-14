@@ -72,5 +72,5 @@ Module Post.
 
   Record t := New {
     header : Header.t;
-    body : LString.t }.
+    content : LString.t }.
 End Post.

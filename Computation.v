@@ -8,12 +8,14 @@ Module Command.
   Inductive t :=
   | ReadFile (file_name : LString.t)
   | ListPosts (directory : LString.t)
+  | ReadPost (file_name : LString.t)
   | Log (message : LString.t).
 
   Definition answer (command : t) : Type :=
     match command with
     | ReadFile _ => option LString.t
     | ListPosts _ => option (list Post.Header.t)
+    | ReadPost _ => option LString.t
     | Log _ => unit
     end.
 End Command.

@@ -28,7 +28,7 @@ Definition header (root : LString.t) : LString.t :=
     <div class=""container-fluid"">
       <div class=""navbar navbar-default"" role=""navigation"">
         <div class=""navbar-header"">
-          <a class=""navbar-brand"" href=""."">MicroBlog</a>
+          <a class=""navbar-brand"" href=""" ++ root ++ LString.s """>MicroBlog</a>
         </div>
       </div>
       <div class=""article"">
@@ -62,6 +62,11 @@ Definition mime_type (answer : Http.Answer.t) : LString.t :=
   | _ => LString.s "text/html; charset=utf-8"
   end.
 
+Definition date (post_header : Post.Header.t) : LString.t :=
+  let date := Post.Header.date post_header in
+  Date.Print.full_month date ++ LString.s " " ++
+  Date.Print.day None date ++ LString.s ", " ++ Date.Print.year 4 None date.
+
 Module Content.
   Definition error : LString.t :=
     LString.s "<h1>Error</h1>".
@@ -75,17 +80,18 @@ Module Content.
 <h2>Posts</h2>
 <ul>" ++
   LString.join [LString.Char.n] (posts |> List.map (fun post =>
-    let date := Post.Header.date post in
-    let date := Date.Print.full_month date ++ LString.s " " ++
-      Date.Print.day None date ++ LString.s ", " ++ Date.Print.year 4 None date in
     LString.s "<li><a href=""posts/" ++ Post.Header.url post ++ LString.s """>" ++
-    Post.Header.title post ++ LString.s "</a> " ++ date ++ LString.s "</li>")) ++
+    Post.Header.title post ++ LString.s "</a> " ++ date post ++ LString.s "</li>")) ++
   LString.s "</ul>".
 
   Definition post (post : option Post.t) : LString.t :=
     match post with
     | None => LString.s "<p>Post not found.</p>"
-    | Some post => LString.s "<p>TODO</p>"
+    | Some post =>
+      let header := Post.header post in
+      LString.s "<h1>" ++ Post.Header.title header ++ LString.s "</h1>
+<p><em>" ++ date header ++ LString.s "</em></p>
+" ++ Post.content post
     end.
 
   Definition args (args : list (LString.t * list LString.t)) : LString.t :=
