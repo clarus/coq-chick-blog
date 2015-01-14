@@ -18,10 +18,10 @@ Module String.
   Extract Constant t => "string".
 
   Parameter of_lstring : LString.t -> t.
-  Extract Constant of_lstring => "OCaml.String.of_lstring".
+  Extract Constant of_lstring => "Utils.String.of_lstring".
 
   Parameter to_lstring : t -> LString.t.
-  Extract Constant to_lstring => "OCaml.String.to_lstring".
+  Extract Constant to_lstring => "Utils.String.to_lstring".
 End String.
 
 (** Unbounded integers. *)
