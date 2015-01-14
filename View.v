@@ -109,7 +109,16 @@ Module Content.
 </form>"
     end.
 
-  Definition args (args : list (LString.t * list LString.t)) : LString.t :=
+  Definition post_update (is_success : bool) : LString.t :=
+    LString.s "<p>" ++
+    LString.s (if is_success then
+      "Post successfully updated."
+    else
+      "The post could not be updated.") ++
+    LString.s "<p>
+<p><a href=""show"">Back to the post.</a></p>".
+
+  Definition args (args : Http.Arguments.t) : LString.t :=
     let args := args |> List.map (fun (arg : _ * _) =>
       let (name, values) := arg in
       LString.s "<dt>" ++ name ++ LString.s "</dt><dd>" ++
@@ -131,5 +140,6 @@ Definition content (answer : Http.Answer.t) : LString.t :=
   | Http.Answer.Index posts => pack (LString.s "") @@ Content.index posts
   | Http.Answer.PostShow post => pack (LString.s "../../") @@ Content.post_show post
   | Http.Answer.PostEdit post => pack (LString.s "../../") @@ Content.post_edit post
+  | Http.Answer.PostUpdate is_success => pack (LString.s "../../") @@ Content.post_update is_success
   | Http.Answer.Args args => pack (LString.s "") @@ Content.args args
   end.

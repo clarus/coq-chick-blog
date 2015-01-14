@@ -48,6 +48,6 @@ Definition index (file_names : list LString.t) : FiniteRun.t.
   - exact nil.
 Defined.
 
-Definition args (args : list (LString.t * list LString.t)) : FiniteRun.t.
+Definition args (args : Arguments.t) : FiniteRun.t.
   static_page [LString.s "args"] args (Http.Answer.Args args).
 Defined.

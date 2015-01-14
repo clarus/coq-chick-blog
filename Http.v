@@ -1,9 +1,26 @@
+Require Import Coq.Lists.List.
 Require Import ListString.All.
 Require Import Model.
 
+Import ListNotations.
+
+Module Arguments.
+  Definition t := list (LString.t * list LString.t).
+
+  Fixpoint find (args : t) (key : LString.t) : option (list LString.t) :=
+    match args with
+    | [] => None
+    | (key', values) :: args =>
+      if LString.eqb key key' then
+        Some values
+      else
+        find args key
+    end.
+End Arguments.
+
 Module Request.
   Inductive t :=
-  | Get (path : list LString.t) (args : list (LString.t * list LString.t)).
+  | Get (path : list LString.t) (args : Arguments.t).
 End Request.
 
 Module Answer.
@@ -13,5 +30,6 @@ Module Answer.
   | Index (posts : list Post.Header.t)
   | PostShow (post : option Post.t)
   | PostEdit (post : option Post.t)
-  | Args (args : list (LString.t * list LString.t)).
+  | PostUpdate (is_success : bool)
+  | Args (args : Arguments.t).
 End Answer.

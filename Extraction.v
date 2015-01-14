@@ -52,6 +52,9 @@ Module Lwt.
   Parameter read_file : String.t -> t (option String.t).
   Extract Constant read_file => "Utils.read_file".
 
+  Parameter update_file : String.t -> String.t -> t bool.
+  Extract Constant update_file => "Utils.update_file".
+
   Parameter list_files : String.t -> t (option (list String.t)).
   Extract Constant list_files => "Utils.list_files".
 End Lwt.
@@ -76,12 +79,14 @@ Fixpoint eval {A : Type} (x : C.t A) : Lwt.t A :=
   | C.Let (Command.ReadFile file_name) handler =>
     Lwt.bind (Lwt.read_file @@ String.of_lstring file_name) (fun content =>
     eval @@ handler @@ option_map String.to_lstring content)
+  | C.Let (Command.UpdateFile file_name content) handler =>
+    let file_name := String.of_lstring file_name in
+    let content := String.of_lstring content in
+    Lwt.bind (Lwt.update_file file_name content) (fun is_success =>
+    eval @@ handler is_success)
   | C.Let (Command.ListPosts directory) handler =>
     Lwt.bind (list_posts directory) (fun posts =>
     eval @@ handler posts)
-  | C.Let (Command.ReadPost file_name) handler =>
-    Lwt.bind (Lwt.read_file @@ String.of_lstring file_name) (fun content =>
-    eval @@ handler @@ option_map String.to_lstring content)
   | C.Let (Command.Log message) handler =>
     let message := String.of_lstring message in
     Lwt.bind (Lwt.printl message) (fun _ =>

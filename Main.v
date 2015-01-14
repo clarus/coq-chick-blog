@@ -59,8 +59,8 @@ Module Controller.
       match header with
       | None => C.Ret @@ Http.Answer.PostShow None
       | Some header =>
-        let! content :=
-          Command.ReadPost (posts_directory ++ Post.Header.file_name header) in
+        let file_name := posts_directory ++ Post.Header.file_name header in
+        let! content := Command.ReadFile file_name in
         let post := content |> option_map (Post.New header) in
         C.Ret @@ Http.Answer.PostShow post
       end
@@ -76,14 +76,35 @@ Module Controller.
       match header with
       | None => C.Ret @@ Http.Answer.PostEdit None
       | Some header =>
-        let! content :=
-          Command.ReadPost (posts_directory ++ Post.Header.file_name header) in
+        let file_name := posts_directory ++ Post.Header.file_name header in
+        let! content := Command.ReadFile file_name in
         let post := content |> option_map (Post.New header) in
         C.Ret @@ Http.Answer.PostEdit post
       end
     end.
 
-  Definition args (args : list (LString.t * list LString.t))
+  Definition post_update (post_url : LString.t) (args : Http.Arguments.t)
+    : C.t Http.Answer.t :=
+    match Http.Arguments.find args @@ LString.s "content" with
+    | Some [content] =>
+      let! posts := Command.ListPosts posts_directory in
+      match posts with
+      | None => C.Ret @@ Http.Answer.PostUpdate false
+      | Some posts =>
+        let header := posts |> List.find (fun post =>
+          LString.eqb (Post.Header.url post) post_url) in
+        match header with
+        | None => C.Ret @@ Http.Answer.PostUpdate false
+        | Some header =>
+          let file_name := posts_directory ++ Post.Header.file_name header in
+          let! is_success := Command.UpdateFile file_name content in
+          C.Ret @@ Http.Answer.PostUpdate is_success
+        end
+      end
+    | _ => C.Ret @@ Http.Answer.PostUpdate false
+    end.
+
+  Definition args (args : Http.Arguments.t)
     : C.t Http.Answer.t :=
     C.Ret @@ Http.Answer.Args args.
 End Controller.
@@ -96,8 +117,14 @@ Definition server (request : Http.Request.t) : C.t Http.Answer.t :=
     match path with
     | "static" :: _ => Controller.static (List.map LString.s path)
     | [] => Controller.index
-    | ["posts"; post_url; "show"] => Controller.post_show @@ LString.s post_url
-    | ["posts"; post_url; "edit"] => Controller.post_edit @@ LString.s post_url
+    | ["posts"; post_url; command] =>
+      let post_url := LString.s post_url in
+      match command with
+      | "show" => Controller.post_show post_url
+      | "edit" => Controller.post_edit post_url
+      | "update" => Controller.post_update post_url args
+      | _ => Controller.error
+      end
     | ["args"] => Controller.args args
     | _ => Controller.error
     end
