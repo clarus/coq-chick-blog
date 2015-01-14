@@ -101,7 +101,12 @@ Module Content.
       let header := Post.header post in
       LString.s "<h1>" ++ Post.Header.title header ++ LString.s "</h1>
 <p><em>" ++ date header ++ LString.s "</em></p>
-<textarea class=""form-control"" rows=""3"">" ++ Post.content post ++ LString.s "</textarea>"
+<form action=""update"" method=""GET"">
+  <div class=""form-group"">
+    <textarea class=""form-control"" name=""content"" rows=""5"">" ++ Post.content post ++ LString.s "</textarea>
+  </div>
+  <button type=""submit"" class=""btn btn-default"">Submit</button>
+</form>"
     end.
 
   Definition args (args : list (LString.t * list LString.t)) : LString.t :=
