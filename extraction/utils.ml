@@ -22,3 +22,26 @@ let list_files (directory : string) : string list option Lwt.t =
     Lwt.bind (Lwt_stream.to_list file_names) (fun file_names ->
     Lwt.return @@ Some file_names))
     (fun _ -> Lwt.return None)
+
+let start_server
+  (handler : string list -> (string * string list) list -> (string * string) list ->
+    ((string * (string * string) list) * string) Lwt.t)
+  (port : int) : unit Lwt.t =
+  let callback (connection : Cohttp_lwt_unix.Server.conn)
+    (request : Cohttp.Request.t) (body : Cohttp_lwt_body.t)
+    : (Cohttp.Response.t * Cohttp_lwt_body.t) Lwt.t =
+    let uri = Cohttp.Request.uri request in
+    let path = Str.split (Str.regexp_string "/") @@ Uri.path uri in
+    let args = Uri.query uri in
+    let cookies = Cohttp.Request.headers request
+      |> Cohttp.Cookie.Cookie_hdr.extract in
+    Lwt.bind (handler path args cookies) (fun ((mime_type, cookies), content) ->
+    let cookies = cookies |> List.map (fun cookie ->
+      Cohttp.Cookie.Set_cookie_hdr.make cookie
+      |> Cohttp.Cookie.Set_cookie_hdr.serialize) in
+    let headers = Cohttp.Header.of_list
+      (("content-type", mime_type) :: cookies) in
+    (Cohttp_lwt_unix.Server.respond_string ~headers:headers) `OK content ()) in
+  let config = Cohttp_lwt_unix.Server.make callback () in
+  Lwt.bind (Lwt_io.printlf "HTTP server starting on port %d." port) (fun _ ->
+  Cohttp_lwt_unix.Server.create ~mode:(`TCP (`Port port)) config)

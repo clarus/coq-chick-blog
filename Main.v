@@ -114,7 +114,7 @@ End Controller.
 
 Definition server (request : Http.Request.t) : C.t Http.Answer.t :=
   match request with
-  | Http.Request.Get path args =>
+  | Http.Request.Get path args cookies =>
     do! Command.Log (LString.s "GET /" ++ LString.join (LString.s "/") path) in
     let path := List.map LString.to_string path in
     match path with

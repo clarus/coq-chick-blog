@@ -18,9 +18,13 @@ Module Arguments.
     end.
 End Arguments.
 
+Module Cookies.
+  Definition t := list (LString.t * LString.t).
+End Cookies.
+
 Module Request.
   Inductive t :=
-  | Get (path : list LString.t) (args : Arguments.t).
+  | Get (path : list LString.t) (args : Arguments.t) (cookies : Cookies.t).
 End Request.
 
 Module Answer.

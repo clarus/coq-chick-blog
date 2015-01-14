@@ -94,20 +94,26 @@ Fixpoint eval {A : Type} (x : C.t A) : Lwt.t A :=
   end.
 
 Parameter main_loop :
-  (list String.t -> list (String.t * list String.t) ->
-    Lwt.t (String.t * String.t)) ->
+  (list String.t -> list (String.t * list String.t) -> list (String.t * String.t) ->
+    Lwt.t (String.t * list (String.t * String.t) * String.t)) ->
   unit.
 Extract Constant main_loop => "fun handler ->
-  Lwt_main.run (Http.start_server handler 8008)".
+  Lwt_main.run (Utils.start_server handler 8008)".
 
 Definition main (handler : Http.Request.t -> C.t Http.Answer.t) : unit :=
-  main_loop (fun path args =>
+  main_loop (fun path args cookies =>
     let path := List.map String.to_lstring path in
     let args := args |> List.map (fun (arg : _ * _) =>
       let (name, values) := arg in
       (String.to_lstring name, List.map String.to_lstring values)) in
-    let request := Http.Request.Get path args in
+    let cookies := cookies |> List.map (fun (cookie : _ * _) =>
+      let (key, v) := cookie in
+      (String.to_lstring key, String.to_lstring v)) in
+    let request := Http.Request.Get path args cookies in
     Lwt.bind (eval @@ handler request) (fun answer =>
     let mime_type := String.of_lstring @@ View.mime_type answer in
     let content := String.of_lstring @@ View.content answer in
-    Lwt.ret (mime_type, content))).
+    let cookies := View.cookies answer |> List.map (fun (cookie : _ * _) =>
+      let (key, v) := cookie in
+      (String.of_lstring key, String.of_lstring v)) in
+    Lwt.ret (mime_type, cookies, content))).

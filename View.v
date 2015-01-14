@@ -74,6 +74,13 @@ Definition mime_type (answer : Http.Answer.t) : LString.t :=
   | _ => LString.s "text/html; charset=utf-8"
   end.
 
+Definition cookies (answer : Http.Answer.t) : Http.Cookies.t :=
+  match answer with
+  | Http.Answer.Login => [(LString.s "is_logged", LString.s "true")]
+  | Http.Answer.Logout => [(LString.s "is_logged", LString.s "false")]
+  | _ => []
+  end.
+
 Definition date (post_header : Post.Header.t) : LString.t :=
   let date := Post.Header.date post_header in
   Date.Print.full_month date ++ LString.s " " ++
@@ -84,10 +91,10 @@ Module Content.
     LString.s "<p>Error.</p>".
 
   Definition login : LString.t :=
-    LString.s "<p>Login: TODO.</p>".
+    LString.s "<p>You are logged in.</p>".
 
   Definition logout : LString.t :=
-    LString.s "<p>Logout: TODO.</p>".
+    LString.s "<p>You are logged out.</p>".
 
   Definition index (posts : list Post.Header.t) : LString.t :=
     LString.s "<h1>Welcome</h1>
