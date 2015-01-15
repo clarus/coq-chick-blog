@@ -45,17 +45,22 @@ Module Request.
 End Request.
 
 Module Answer.
-  Module Content.
+  Module Public.
     Inductive t :=
     | Index (posts : list Post.Header.t)
-    | PostShow (post : option Post.t)
+    | PostShow (post : option Post.t).
+  End Public.
+
+  Module Private.
+    Inductive t :=
     | PostEdit (post : option Post.t)
     | PostUpdate (is_success : bool).
-  End Content.
+  End Private.
 
   Inductive t :=
-  | Error
+  | NotFound | Forbidden
   | Static (mime_type : LString.t) (content : LString.t)
   | Login | Logout
-  | Success (is_logged : bool) (content : Content.t).
+  | Public (is_logged : bool) (page : Public.t)
+  | Private (page : Private.t).
 End Answer.

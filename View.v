@@ -87,9 +87,6 @@ Definition date (post_header : Post.Header.t) : LString.t :=
   Date.Print.day None date ++ LString.s ", " ++ Date.Print.year 4 None date.
 
 Module Content.
-  Definition error : LString.t :=
-    LString.s "<p>Error.</p>".
-
   Definition login : LString.t :=
     LString.s "<p>You are logged in.</p>".
 
@@ -148,19 +145,23 @@ Definition pack (root : LString.t) (is_logged : option bool)
 
 Definition content (answer : Http.Answer.t) : LString.t :=
   match answer with
-  | Http.Answer.Error => Content.error
+  | Http.Answer.NotFound => LString.s "<p>Not found.</p>"
+  | Http.Answer.Forbidden => LString.s "<p>Forbidden.</p>"
   | Http.Answer.Static _ content => content
   | Http.Answer.Login => pack (LString.s "") None Content.login
   | Http.Answer.Logout => pack (LString.s "") None Content.logout
-  | Http.Answer.Success is_logged content =>
-    match content with
-    | Http.Answer.Content.Index posts =>
+  | Http.Answer.Public is_logged page =>
+    match page with
+    | Http.Answer.Public.Index posts =>
       pack (LString.s "") (Some is_logged) @@ Content.index posts
-    | Http.Answer.Content.PostShow post =>
+    | Http.Answer.Public.PostShow post =>
       pack (LString.s "../../") (Some is_logged) @@ Content.post_show post
-    | Http.Answer.Content.PostEdit post =>
-      pack (LString.s "../../") (Some is_logged) @@ Content.post_edit post
-    | Http.Answer.Content.PostUpdate is_success =>
-      pack (LString.s "../../") (Some is_logged) @@ Content.post_update is_success
+    end
+  | Http.Answer.Private page =>
+    match page with
+    | Http.Answer.Private.PostEdit post =>
+      pack (LString.s "../../") (Some true) @@ Content.post_edit post
+    | Http.Answer.Private.PostUpdate is_success =>
+      pack (LString.s "../../") (Some true) @@ Content.post_update is_success
     end
   end.
