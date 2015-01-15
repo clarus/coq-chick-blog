@@ -121,6 +121,76 @@ Module Content.
 " ++ Post.content post
     end.
 
+  Definition post_add : LString.t :=
+    LString.s "<h1>Add post</h1>
+<form method=""GET"" action=""/posts/do_add"">
+  <div class=""form-group"">
+    <label for=""title"">Title</label>
+    <input type=""text"" class=""form-control"" id=""title"" name=""title"" placeholder=""Enter a title"">
+  </div>
+  <div class=""form-group"">
+    <label for=""year"">Year</label>
+    <select class=""form-control"" id=""year"" name=""year"">
+      <option>2015</option>
+      <option>2016</option>
+      <option>2017</option>
+      <option>2018</option>
+      <option>2019</option>
+      <option>2020</option>
+    </select>
+    <label for=""month"">Month</label>
+    <select class=""form-control"" id=""month"" name=""month"">
+      <option>1</option>
+      <option>2</option>
+      <option>3</option>
+      <option>4</option>
+      <option>5</option>
+      <option>6</option>
+      <option>7</option>
+      <option>8</option>
+      <option>9</option>
+      <option>10</option>
+      <option>11</option>
+      <option>12</option>
+    </select>
+    <label for=""day"">Day</label>
+    <select class=""form-control"" id=""day"" name=""day"">
+      <option>1</option>
+      <option>2</option>
+      <option>3</option>
+      <option>4</option>
+      <option>5</option>
+      <option>6</option>
+      <option>7</option>
+      <option>8</option>
+      <option>9</option>
+      <option>10</option>
+      <option>11</option>
+      <option>12</option>
+      <option>13</option>
+      <option>14</option>
+      <option>15</option>
+      <option>16</option>
+      <option>17</option>
+      <option>18</option>
+      <option>19</option>
+      <option>20</option>
+      <option>21</option>
+      <option>22</option>
+      <option>23</option>
+      <option>24</option>
+      <option>25</option>
+      <option>26</option>
+      <option>27</option>
+      <option>28</option>
+      <option>29</option>
+      <option>30</option>
+      <option>31</option>
+    </select>
+  </div>
+  <button type=""submit"" class=""btn btn-default"">Submit</button>
+</form>".
+
   Definition post_edit (url : LString.t) (post : option Post.t) : LString.t :=
     match post with
     | None => LString.s "<p>Post not found.</p>"
@@ -166,6 +236,8 @@ Definition content (answer : Http.Answer.t) : LString.t :=
     end
   | Http.Answer.Private page =>
     match page with
+    | Http.Answer.Private.PostAdd =>
+      pack (LString.s "../") (Some true) @@ Content.post_add
     | Http.Answer.Private.PostEdit url post =>
       pack (LString.s "../../") (Some true) @@ Content.post_edit url post
     | Http.Answer.Private.PostDoEdit url is_success =>

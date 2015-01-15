@@ -53,6 +53,7 @@ Module Answer.
 
   Module Private.
     Inductive t :=
+    | PostAdd
     | PostEdit (url : LString.t) (post : option Post.t)
     | PostDoEdit (url : LString.t) (is_success : bool).
   End Private.
