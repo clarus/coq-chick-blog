@@ -32,6 +32,12 @@ let update_file (file_name : string) (content : string) : bool Lwt.t =
     Lwt.return true))))
     (fun _ -> Lwt.return false)
 
+let delete_file (file_name : string) : bool Lwt.t =
+  Lwt.catch (fun _ ->
+    Lwt.bind (Lwt_unix.unlink file_name) (fun _ ->
+    Lwt.return true))
+    (fun _ -> Lwt.return false)
+
 let list_files (directory : string) : string list option Lwt.t =
   Lwt.catch (fun _ ->
     let file_names = Lwt_unix.files_of_directory directory in

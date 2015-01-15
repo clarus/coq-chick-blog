@@ -55,6 +55,9 @@ Module Lwt.
   Parameter update_file : String.t -> String.t -> t bool.
   Extract Constant update_file => "Utils.update_file".
 
+  Parameter delete_file : String.t -> t bool.
+  Extract Constant delete_file => "Utils.delete_file".
+
   Parameter list_files : String.t -> t (option (list String.t)).
   Extract Constant list_files => "Utils.list_files".
 End Lwt.
@@ -83,6 +86,9 @@ Fixpoint eval {A : Type} (x : C.t A) : Lwt.t A :=
     let file_name := String.of_lstring file_name in
     let content := String.of_lstring content in
     Lwt.bind (Lwt.update_file file_name content) (fun is_success =>
+    eval @@ handler is_success)
+  | C.Let (Command.DeleteFile file_name) handler =>
+    Lwt.bind (Lwt.delete_file @@ String.of_lstring file_name) (fun is_success =>
     eval @@ handler is_success)
   | C.Let (Command.ListPosts directory) handler =>
     Lwt.bind (list_posts directory) (fun posts =>

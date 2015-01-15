@@ -8,6 +8,7 @@ Module Command.
   Inductive t :=
   | ReadFile (file_name : LString.t)
   | UpdateFile (file_name : LString.t) (content : LString.t)
+  | DeleteFile (file_name : LString.t)
   | ListPosts (directory : LString.t)
   | Log (message : LString.t).
 
@@ -15,6 +16,7 @@ Module Command.
     match command with
     | ReadFile _ => option LString.t
     | UpdateFile _ _ => bool
+    | DeleteFile _ => bool
     | ListPosts _ => option (list Post.Header.t)
     | Log _ => unit
     end.
