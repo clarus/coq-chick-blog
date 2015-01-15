@@ -46,7 +46,7 @@ let list_files (directory : string) : string list option Lwt.t =
     (fun _ -> Lwt.return None)
 
 let start_server
-  (handler : string list -> (string * string list) list -> (string * string) list ->
+  (handler : ((string list * (string * string list) list) * (string * string) list) ->
     ((string * (string * string) list) * string) Lwt.t)
   (port : int) : unit Lwt.t =
   let callback (connection : Cohttp_lwt_unix.Server.conn)
@@ -57,7 +57,7 @@ let start_server
     let args = Uri.query uri in
     let cookies = Cohttp.Request.headers request
       |> Cohttp.Cookie.Cookie_hdr.extract in
-    Lwt.bind (handler path args cookies) (fun ((mime_type, cookies), content) ->
+    Lwt.bind (handler ((path, args), cookies)) (fun ((mime_type, cookies), content) ->
     let cookies = cookies |> List.map (fun cookie ->
       Cohttp.Cookie.Set_cookie_hdr.make cookie
       |> Cohttp.Cookie.Set_cookie_hdr.serialize) in

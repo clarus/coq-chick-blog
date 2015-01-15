@@ -12,6 +12,7 @@ Require Request.
 Require View.
 
 Import ListNotations.
+Local Open Scope type.
 
 Module String.
   Parameter t : Type.
@@ -99,27 +100,41 @@ Fixpoint eval {A : Type} (x : C.t A) : Lwt.t A :=
     eval @@ handler tt)
   end.
 
-Parameter main_loop :
-  (list String.t -> list (String.t * list String.t) -> list (String.t * String.t) ->
-    Lwt.t (String.t * list (String.t * String.t) * String.t)) ->
-  unit.
+Module RawRequest.
+  Definition t := list String.t * list (String.t * list String.t) * list (String.t * String.t).
+
+  Definition import (request : t) : Request.Raw.t :=
+    match request with
+    | (path, args, cookies) =>
+      let path := List.map String.to_lstring path in
+      let args := args |> List.map (fun (arg : _ * _) =>
+        let (name, values) := arg in
+        (String.to_lstring name, List.map String.to_lstring values)) in
+      let cookies := cookies |> List.map (fun (cookie : _ * _) =>
+        let (key, v) := cookie in
+        (String.to_lstring key, String.to_lstring v)) in
+      Request.Get path args cookies
+    end.
+End RawRequest.
+
+Module RawAnswer.
+  Definition t := String.t * list (String.t * String.t) * String.t.
+
+  Definition export (answer : Answer.Raw.t) : t :=
+    let mime_type := String.of_lstring @@ Answer.Raw.mime_type answer in
+    let cookies := Answer.Raw.cookies answer |> List.map (fun (cookie : _ * _) =>
+      let (k, v) := cookie in
+      (String.of_lstring k, String.of_lstring v)) in
+    let content := String.of_lstring @@ Answer.Raw.content answer in
+    (mime_type, cookies, content).
+End RawAnswer.
+
+Parameter main_loop : (RawRequest.t -> Lwt.t RawAnswer.t) -> unit.
 Extract Constant main_loop => "fun handler ->
   Lwt_main.run (Utils.start_server handler 8008)".
 
 Definition main (handler : Request.t -> C.t Answer.t) : unit :=
-  main_loop (fun path args cookies =>
-    let path := List.map String.to_lstring path in
-    let args := args |> List.map (fun (arg : _ * _) =>
-      let (name, values) := arg in
-      (String.to_lstring name, List.map String.to_lstring values)) in
-    let cookies := cookies |> List.map (fun (cookie : _ * _) =>
-      let (key, v) := cookie in
-      (String.to_lstring key, String.to_lstring v)) in
-    let request := Request.Get path args cookies in
+  main_loop (fun request =>
+    let request := RawRequest.import request in
     Lwt.bind (eval @@ handler request) (fun answer =>
-    let mime_type := String.of_lstring @@ View.mime_type answer in
-    let content := String.of_lstring @@ View.content answer in
-    let cookies := View.cookies answer |> List.map (fun (cookie : _ * _) =>
-      let (key, v) := cookie in
-      (String.of_lstring key, String.of_lstring v)) in
-    Lwt.ret (mime_type, cookies, content))).
+    Lwt.ret @@ RawAnswer.export @@ View.raw answer)).

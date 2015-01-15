@@ -265,3 +265,6 @@ Definition content (answer : Answer.t) : LString.t :=
       pack (LString.s "../../") (Some true) @@ Content.post_do_delete is_success
     end
   end.
+
+Definition raw (answer : Answer.t) : Answer.Raw.t :=
+  Answer.Raw.New (mime_type answer) (cookies answer) (content answer).

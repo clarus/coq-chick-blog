@@ -1,4 +1,13 @@
+Require Import ListString.All.
+Require Http.
 Require Import Model.
+
+Module Raw.
+  Record t := New {
+    mime_type : LString.t;
+    cookies : Http.Cookies.t;
+    content : LString.t }.
+End Raw.
 
 Module Public.
   Inductive t :=
