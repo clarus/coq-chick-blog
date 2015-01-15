@@ -133,8 +133,9 @@ Parameter main_loop : (RawRequest.t -> Lwt.t RawAnswer.t) -> unit.
 Extract Constant main_loop => "fun handler ->
   Lwt_main.run (Utils.start_server handler 8008)".
 
-Definition main (handler : Request.t -> C.t Answer.t) : unit :=
+Definition main (handler : Request.Path.t -> Request.Cookies.t-> C.t Answer.t)
+  : unit :=
   main_loop (fun request =>
-    let request := Request.parse @@ RawRequest.import request in
-    Lwt.bind (eval @@ handler request) (fun answer =>
+    let (path, cookies) := Request.parse @@ RawRequest.import request in
+    Lwt.bind (eval @@ handler path cookies) (fun answer =>
     Lwt.ret @@ RawAnswer.export @@ Render.raw answer)).

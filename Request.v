@@ -104,10 +104,6 @@ Module Cookies.
     end.
 End Cookies.
 
-Record t := New {
-  path : Path.t;
-  cookies : Cookies.t }.
-
-Definition parse (request : Raw.t) : t :=
-  New (Path.parse (Raw.path request) (Raw.args request))
-    (Cookies.parse (Raw.cookies request)).
+Definition parse (request : Raw.t) : Path.t * Cookies.t := (
+  Path.parse (Raw.path request) (Raw.args request),
+  Cookies.parse (Raw.cookies request)).

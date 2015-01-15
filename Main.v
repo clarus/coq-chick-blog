@@ -147,9 +147,9 @@ Module Controller.
       C.Ret @@ Answer.Private @@ Answer.Private.PostDoDelete is_success.
 End Controller.
 
-Definition server (request : Request.t) : C.t Answer.t :=
-  let path := Request.path request in
-  let is_logged := Request.Cookies.is_logged @@ Request.cookies request in
+Definition server (path : Request.Path.t) (cookies : Request.Cookies.t)
+  : C.t Answer.t :=
+  let is_logged := Request.Cookies.is_logged cookies in
   match path with
   | Request.Path.NotFound => Controller.not_found
   | Request.Path.WrongArguments => Controller.wrong_arguments
