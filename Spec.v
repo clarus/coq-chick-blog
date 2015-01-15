@@ -27,6 +27,12 @@ Module FiniteRun.
   Definition t := list RunRequest.t.
 End FiniteRun.
 
+Definition index : RunRequest.t.
+  apply (RunRequest.New (Http.Request.Get [] [] [])).
+  simpl.
+  apply (Run.Call (Command.Log _) tt).
+Defined.
+
 (*
 (** Get one page and compare its result with `answer`. *)
 Ltac static_page path args answer :=
