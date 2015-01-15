@@ -79,21 +79,22 @@ Definition list_posts (directory : LString.t)
 Fixpoint eval {A : Type} (x : C.t A) : Lwt.t A :=
   match x with
   | C.Ret x => Lwt.ret x
-  | C.Let (Command.ReadFile file_name) handler =>
+  | C.Bind _ x f => Lwt.bind (eval x) (fun x => eval @@ f x)
+  | C.Call (Command.ReadFile file_name) handler =>
     Lwt.bind (Lwt.read_file @@ String.of_lstring file_name) (fun content =>
     eval @@ handler @@ option_map String.to_lstring content)
-  | C.Let (Command.UpdateFile file_name content) handler =>
+  | C.Call (Command.UpdateFile file_name content) handler =>
     let file_name := String.of_lstring file_name in
     let content := String.of_lstring content in
     Lwt.bind (Lwt.update_file file_name content) (fun is_success =>
     eval @@ handler is_success)
-  | C.Let (Command.DeleteFile file_name) handler =>
+  | C.Call (Command.DeleteFile file_name) handler =>
     Lwt.bind (Lwt.delete_file @@ String.of_lstring file_name) (fun is_success =>
     eval @@ handler is_success)
-  | C.Let (Command.ListPosts directory) handler =>
+  | C.Call (Command.ListPosts directory) handler =>
     Lwt.bind (list_posts directory) (fun posts =>
     eval @@ handler posts)
-  | C.Let (Command.Log message) handler =>
+  | C.Call (Command.Log message) handler =>
     let message := String.of_lstring message in
     Lwt.bind (Lwt.printl message) (fun _ =>
     eval @@ handler tt)

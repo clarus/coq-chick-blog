@@ -37,17 +37,17 @@ Module Controller.
   Definition static (path : list LString.t) : C.t Http.Answer.t :=
     let mime_type := mime_type @@ List.last path (LString.s "") in
     let file_name := LString.join (LString.s "/") path in
-    let! content := Command.ReadFile file_name in
+    call! content := Command.ReadFile file_name in
     match content with
     | None => not_found
     | Some content => C.Ret @@ Http.Answer.Static mime_type content
     end.
 
   Definition index (is_logged : bool) : C.t Http.Answer.t :=
-    let! posts := Command.ListPosts posts_directory in
+    call! posts := Command.ListPosts posts_directory in
     match posts with
     | None =>
-      do! Command.Log (LString.s "Cannot open the " ++ posts_directory ++
+      do_call! Command.Log (LString.s "Cannot open the " ++ posts_directory ++
         LString.s " directory.") in
       C.Ret @@ Http.Answer.Public is_logged @@ Http.Answer.Public.Index []
     | Some posts => C.Ret @@ Http.Answer.Public is_logged @@
@@ -61,7 +61,7 @@ Module Controller.
     C.Ret Http.Answer.Logout.
 
   Definition post_show (is_logged : bool) (post_url : LString.t) : C.t Http.Answer.t :=
-    let! posts := Command.ListPosts posts_directory in
+    call! posts := Command.ListPosts posts_directory in
     match posts with
     | None => C.Ret @@ Http.Answer.Public is_logged @@ Http.Answer.Public.PostShow post_url None
     | Some posts =>
@@ -71,7 +71,7 @@ Module Controller.
       | None => C.Ret @@ Http.Answer.Public is_logged @@ Http.Answer.Public.PostShow post_url None
       | Some header =>
         let file_name := posts_directory ++ Post.Header.file_name header in
-        let! content := Command.ReadFile file_name in
+        call! content := Command.ReadFile file_name in
         let post := content |> option_map (Post.New header) in
         C.Ret @@ Http.Answer.Public is_logged @@ Http.Answer.Public.PostShow post_url post
       end
@@ -102,7 +102,7 @@ Module Controller.
           let date := Moment.Date.New year month day in
           let file_name := LString.s "posts/" ++ Moment.Date.Print.date date ++
             LString.s " " ++ title ++ LString.s ".html" in
-          let! is_success := Command.UpdateFile file_name (LString.s "") in
+          call! is_success := Command.UpdateFile file_name (LString.s "") in
           C.Ret @@ Http.Answer.Private @@ Http.Answer.Private.PostDoAdd is_success
         | _ => C.Ret @@ Http.Answer.Private @@ Http.Answer.Private.PostDoAdd false
         end
@@ -113,7 +113,7 @@ Module Controller.
     if negb is_logged then
       forbidden
     else
-      let! posts := Command.ListPosts posts_directory in
+      call! posts := Command.ListPosts posts_directory in
       match posts with
       | None => C.Ret @@ Http.Answer.Private @@ Http.Answer.Private.PostEdit post_url None
       | Some posts =>
@@ -123,7 +123,7 @@ Module Controller.
         | None => C.Ret @@ Http.Answer.Private @@ Http.Answer.Private.PostEdit post_url None
         | Some header =>
           let file_name := posts_directory ++ Post.Header.file_name header in
-          let! content := Command.ReadFile file_name in
+          call! content := Command.ReadFile file_name in
           let post := content |> option_map (Post.New header) in
           C.Ret @@ Http.Answer.Private @@ Http.Answer.Private.PostEdit post_url post
         end
@@ -136,7 +136,7 @@ Module Controller.
     else
       match Http.Arguments.find args @@ LString.s "content" with
       | Some [content] =>
-        let! posts := Command.ListPosts posts_directory in
+        call! posts := Command.ListPosts posts_directory in
         match posts with
         | None => C.Ret @@ Http.Answer.Private @@ Http.Answer.Private.PostDoEdit post_url false
         | Some posts =>
@@ -146,7 +146,7 @@ Module Controller.
           | None => C.Ret @@ Http.Answer.Private @@ Http.Answer.Private.PostDoEdit post_url false
           | Some header =>
             let file_name := posts_directory ++ Post.Header.file_name header in
-            let! is_success := Command.UpdateFile file_name content in
+            call! is_success := Command.UpdateFile file_name content in
             C.Ret @@ Http.Answer.Private @@ Http.Answer.Private.PostDoEdit post_url is_success
           end
         end
@@ -158,7 +158,7 @@ Module Controller.
     if negb is_logged then
       forbidden
     else
-      let! posts := Command.ListPosts posts_directory in
+      call! posts := Command.ListPosts posts_directory in
       match posts with
       | None => C.Ret @@ Http.Answer.Private @@ Http.Answer.Private.PostDoDelete false
       | Some posts =>
@@ -168,7 +168,7 @@ Module Controller.
         | None => C.Ret @@ Http.Answer.Private @@ Http.Answer.Private.PostDoDelete false
         | Some header =>
           let file_name := posts_directory ++ Post.Header.file_name header in
-          let! is_success := Command.DeleteFile file_name in
+          call! is_success := Command.DeleteFile file_name in
           C.Ret @@ Http.Answer.Private @@ Http.Answer.Private.PostDoDelete is_success
         end
       end.
@@ -177,7 +177,7 @@ End Controller.
 Definition server (request : Http.Request.t) : C.t Http.Answer.t :=
   match request with
   | Http.Request.Get path args cookies =>
-    do! Command.Log (LString.s "GET /" ++ LString.join (LString.s "/") path) in
+    do_call! Command.Log (LString.s "GET /" ++ LString.join (LString.s "/") path) in
     let path := List.map LString.to_string path in
     let is_logged := Http.Cookies.is_logged cookies in
     match path with
