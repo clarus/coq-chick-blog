@@ -48,13 +48,13 @@ Module Answer.
   Module Public.
     Inductive t :=
     | Index (posts : list Post.Header.t)
-    | PostShow (post : option Post.t).
+    | PostShow (url : LString.t) (post : option Post.t).
   End Public.
 
   Module Private.
     Inductive t :=
-    | PostEdit (post : option Post.t)
-    | PostUpdate (is_success : bool).
+    | PostEdit (url : LString.t) (post : option Post.t)
+    | PostUpdate (url : LString.t) (is_success : bool).
   End Private.
 
   Inductive t :=

@@ -100,30 +100,33 @@ Module Content.
 <h2>Posts</h2>
 <ul>" ++
   LString.join [LString.Char.n] (posts |> List.map (fun post =>
-    LString.s "<li><a href=""posts/" ++ Post.Header.url post ++ LString.s "/show"">" ++
+    LString.s "<li><a href=""/posts/show/" ++ Post.Header.url post ++ LString.s """>" ++
     Post.Header.title post ++ LString.s "</a> " ++ date post ++ LString.s "</li>")) ++
   LString.s "</ul>".
 
-  Definition post_show (is_logged : bool) (post : option Post.t) : LString.t :=
+  Definition post_show (is_logged : bool) (url : LString.t) (post : option Post.t) : LString.t :=
     match post with
     | None => LString.s "<p>Post not found.</p>"
     | Some post =>
       let header := Post.header post in
       LString.s "<h1>" ++ Post.Header.title header ++
-      LString.s (if is_logged then " <small><a href=""edit"">edit</a></small>" else "") ++
+      (if is_logged then
+        LString.s " <small><a href=""/posts/edit/" ++ url ++ LString.s """>edit</a></small>"
+      else
+        LString.s "") ++
       LString.s "</h1>
 <p><em>" ++ date header ++ LString.s "</em></p>
 " ++ Post.content post
     end.
 
-  Definition post_edit (post : option Post.t) : LString.t :=
+  Definition post_edit (url : LString.t) (post : option Post.t) : LString.t :=
     match post with
     | None => LString.s "<p>Post not found.</p>"
     | Some post =>
       let header := Post.header post in
       LString.s "<h1>" ++ Post.Header.title header ++ LString.s "</h1>
 <p><em>" ++ date header ++ LString.s "</em></p>
-<form action=""update"" method=""GET"">
+<form action=""/posts/update/" ++ url ++ LString.s """ method=""GET"">
   <div class=""form-group"">
     <textarea class=""form-control"" name=""content"" rows=""5"">" ++ Post.content post ++ LString.s "</textarea>
   </div>
@@ -131,14 +134,14 @@ Module Content.
 </form>"
     end.
 
-  Definition post_update (is_success : bool) : LString.t :=
+  Definition post_update (url : LString.t) (is_success : bool) : LString.t :=
     LString.s "<p>" ++
     LString.s (if is_success then
       "Post successfully updated."
     else
       "The post could not be updated.") ++
     LString.s "<p>
-<p><a href=""show"">Back to the post.</a></p>".
+<p><a href=""/posts/show/" ++ url ++ LString.s """>Back to the post.</a></p>".
 End Content.
 
 Definition pack (root : LString.t) (is_logged : option bool)
@@ -156,14 +159,14 @@ Definition content (answer : Http.Answer.t) : LString.t :=
     match page with
     | Http.Answer.Public.Index posts =>
       pack (LString.s "") (Some is_logged) @@ Content.index posts
-    | Http.Answer.Public.PostShow post =>
-      pack (LString.s "../../") (Some is_logged) @@ Content.post_show is_logged post
+    | Http.Answer.Public.PostShow url post =>
+      pack (LString.s "../../") (Some is_logged) @@ Content.post_show is_logged url post
     end
   | Http.Answer.Private page =>
     match page with
-    | Http.Answer.Private.PostEdit post =>
-      pack (LString.s "../../") (Some true) @@ Content.post_edit post
-    | Http.Answer.Private.PostUpdate is_success =>
-      pack (LString.s "../../") (Some true) @@ Content.post_update is_success
+    | Http.Answer.Private.PostEdit url post =>
+      pack (LString.s "../../") (Some true) @@ Content.post_edit url post
+    | Http.Answer.Private.PostUpdate url is_success =>
+      pack (LString.s "../../") (Some true) @@ Content.post_update url is_success
     end
   end.

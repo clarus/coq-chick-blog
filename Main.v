@@ -62,17 +62,17 @@ Module Controller.
   Definition post_show (is_logged : bool) (post_url : LString.t) : C.t Http.Answer.t :=
     let! posts := Command.ListPosts posts_directory in
     match posts with
-    | None => C.Ret @@ Http.Answer.Public is_logged @@ Http.Answer.Public.PostShow None
+    | None => C.Ret @@ Http.Answer.Public is_logged @@ Http.Answer.Public.PostShow post_url None
     | Some posts =>
       let header := posts |> List.find (fun post =>
         LString.eqb (Post.Header.url post) post_url) in
       match header with
-      | None => C.Ret @@ Http.Answer.Public is_logged @@ Http.Answer.Public.PostShow None
+      | None => C.Ret @@ Http.Answer.Public is_logged @@ Http.Answer.Public.PostShow post_url None
       | Some header =>
         let file_name := posts_directory ++ Post.Header.file_name header in
         let! content := Command.ReadFile file_name in
         let post := content |> option_map (Post.New header) in
-        C.Ret @@ Http.Answer.Public is_logged @@ Http.Answer.Public.PostShow post
+        C.Ret @@ Http.Answer.Public is_logged @@ Http.Answer.Public.PostShow post_url post
       end
     end.
 
@@ -82,17 +82,17 @@ Module Controller.
     else
       let! posts := Command.ListPosts posts_directory in
       match posts with
-      | None => C.Ret @@ Http.Answer.Private @@ Http.Answer.Private.PostEdit None
+      | None => C.Ret @@ Http.Answer.Private @@ Http.Answer.Private.PostEdit post_url None
       | Some posts =>
         let header := posts |> List.find (fun post =>
           LString.eqb (Post.Header.url post) post_url) in
         match header with
-        | None => C.Ret @@ Http.Answer.Private @@ Http.Answer.Private.PostEdit None
+        | None => C.Ret @@ Http.Answer.Private @@ Http.Answer.Private.PostEdit post_url None
         | Some header =>
           let file_name := posts_directory ++ Post.Header.file_name header in
           let! content := Command.ReadFile file_name in
           let post := content |> option_map (Post.New header) in
-          C.Ret @@ Http.Answer.Private @@ Http.Answer.Private.PostEdit post
+          C.Ret @@ Http.Answer.Private @@ Http.Answer.Private.PostEdit post_url post
         end
       end.
 
@@ -105,19 +105,19 @@ Module Controller.
       | Some [content] =>
         let! posts := Command.ListPosts posts_directory in
         match posts with
-        | None => C.Ret @@ Http.Answer.Private @@ Http.Answer.Private.PostUpdate false
+        | None => C.Ret @@ Http.Answer.Private @@ Http.Answer.Private.PostUpdate post_url false
         | Some posts =>
           let header := posts |> List.find (fun post =>
             LString.eqb (Post.Header.url post) post_url) in
           match header with
-          | None => C.Ret @@ Http.Answer.Private @@ Http.Answer.Private.PostUpdate false
+          | None => C.Ret @@ Http.Answer.Private @@ Http.Answer.Private.PostUpdate post_url false
           | Some header =>
             let file_name := posts_directory ++ Post.Header.file_name header in
             let! is_success := Command.UpdateFile file_name content in
-            C.Ret @@ Http.Answer.Private @@ Http.Answer.Private.PostUpdate is_success
+            C.Ret @@ Http.Answer.Private @@ Http.Answer.Private.PostUpdate post_url is_success
           end
         end
-      | _ => C.Ret @@ Http.Answer.Private @@ Http.Answer.Private.PostUpdate false
+      | _ => C.Ret @@ Http.Answer.Private @@ Http.Answer.Private.PostUpdate post_url false
       end.
 End Controller.
 
@@ -132,7 +132,7 @@ Definition server (request : Http.Request.t) : C.t Http.Answer.t :=
     | [] => Controller.index is_logged
     | ["login"] => Controller.login
     | ["logout"] => Controller.logout
-    | ["posts"; post_url; command] =>
+    | ["posts"; command; post_url] =>
       let post_url := LString.s post_url in
       match command with
       | "show" => Controller.post_show is_logged post_url
