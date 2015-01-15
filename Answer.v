@@ -25,7 +25,7 @@ Module Private.
 End Private.
 
 Inductive t :=
-| NotFound | Forbidden
+| NotFound | WrongArguments | Forbidden
 | Static (mime_type : LString.t) (content : LString.t)
 | Login | Logout
 | Public (is_logged : bool) (page : Public.t)

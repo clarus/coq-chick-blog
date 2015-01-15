@@ -240,6 +240,7 @@ Definition pack (root : LString.t) (is_logged : option bool)
 Definition content (answer : Answer.t) : LString.t :=
   match answer with
   | Answer.NotFound => LString.s "Not found."
+  | Answer.WrongArguments => LString.s "Wrong arguments."
   | Answer.Forbidden => LString.s "Forbidden."
   | Answer.Static _ content => content
   | Answer.Login => pack (LString.s "") None Content.login

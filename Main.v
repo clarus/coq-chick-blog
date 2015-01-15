@@ -44,6 +44,9 @@ Module Controller.
   Definition not_found : C.t Answer.t :=
     C.Ret Answer.NotFound.
 
+  Definition wrong_arguments : C.t Answer.t :=
+    C.Ret Answer.WrongArguments.
+
   Definition forbidden : C.t Answer.t :=
     C.Ret Answer.Forbidden.
 
@@ -94,31 +97,15 @@ Module Controller.
     else
       C.Ret @@ Answer.Private Answer.Private.PostAdd.
 
-  Definition post_do_add (is_logged : bool) (args : Http.Arguments.t)
-    : C.t Answer.t :=
+  Definition post_do_add (is_logged : bool) (title : LString.t)
+    (date : Moment.Date.t) : C.t Answer.t :=
     if negb is_logged then
       forbidden
     else
-      let title := Http.Arguments.find args @@ LString.s "title" in
-      let year := Http.Arguments.find args @@ LString.s "year" in
-      let month := Http.Arguments.find args @@ LString.s "month" in
-      let day := Http.Arguments.find args @@ LString.s "day" in
-      match (title, year, month, day) with
-      | (Some [title], Some [year], Some [month], Some [day]) =>
-        let year := Moment.Date.Parse.zero_padded_year 4 year in
-        let month := Moment.Date.Parse.zero_padded_month month in
-        let day := Moment.Date.Parse.zero_padded_day day in
-        match (year, month, day) with
-        | (Some (year, []), Some (month, []), Some (day, [])) =>
-          let date := Moment.Date.New year month day in
-          let file_name := LString.s "posts/" ++ Moment.Date.Print.date date ++
-            LString.s " " ++ title ++ LString.s ".html" in
-          call! is_success := Command.UpdateFile file_name (LString.s "") in
-          C.Ret @@ Answer.Private @@ Answer.Private.PostDoAdd is_success
-        | _ => C.Ret @@ Answer.Private @@ Answer.Private.PostDoAdd false
-        end
-      | _ => C.Ret @@ Answer.Private @@ Answer.Private.PostDoAdd false
-      end.
+      let file_name := LString.s "posts/" ++ Moment.Date.Print.date date ++
+        LString.s " " ++ title ++ LString.s ".html" in
+      call! is_success := Command.UpdateFile file_name (LString.s "") in
+      C.Ret @@ Answer.Private @@ Answer.Private.PostDoAdd is_success.
 
   Definition post_edit (is_logged : bool) (post_url : LString.t) : C.t Answer.t :=
     if negb is_logged then
@@ -128,22 +115,18 @@ Module Controller.
       C.Ret @@ Answer.Private @@ Answer.Private.PostEdit post_url post.
 
   Definition post_do_edit (is_logged : bool) (post_url : LString.t)
-    (args : Http.Arguments.t) : C.t Answer.t :=
+    (content : LString.t) : C.t Answer.t :=
     if negb is_logged then
       forbidden
     else
       let! is_success : bool := fun k =>
-        match Http.Arguments.find args @@ LString.s "content" with
-        | Some [content] =>
-          let! header := Helpers.post_header post_url in
-          match header with
-          | None => k false
-          | Some header =>
-            let file_name := posts_directory ++ Post.Header.file_name header in
-            call! is_success : bool := Command.UpdateFile file_name content in
-            k is_success
-          end
-        | _ => k false
+        let! header := Helpers.post_header post_url in
+        match header with
+        | None => k false
+        | Some header =>
+          let file_name := posts_directory ++ Post.Header.file_name header in
+          call! is_success : bool := Command.UpdateFile file_name content in
+          k is_success
         end in
       C.Ret @@ Answer.Private @@ Answer.Private.PostDoEdit post_url is_success.
 
@@ -166,19 +149,19 @@ End Controller.
 
 Definition server (request : Request.t) : C.t Answer.t :=
   let path := Request.path request in
-  let args := Request.args request in
   let is_logged := Request.Cookies.is_logged @@ Request.cookies request in
   match path with
   | Request.Path.NotFound => Controller.not_found
+  | Request.Path.WrongArguments => Controller.wrong_arguments
   | Request.Path.Static path => Controller.static path
   | Request.Path.Index => Controller.index is_logged
   | Request.Path.Login => Controller.login
   | Request.Path.Logout => Controller.logout
   | Request.Path.PostAdd => Controller.post_add is_logged
-  | Request.Path.PostDoAdd => Controller.post_do_add is_logged args
+  | Request.Path.PostDoAdd title date => Controller.post_do_add is_logged title date
   | Request.Path.PostShow post_url => Controller.post_show is_logged post_url
   | Request.Path.PostEdit post_url => Controller.post_edit is_logged post_url
-  | Request.Path.PostDoEdit post_url => Controller.post_do_edit is_logged post_url args
+  | Request.Path.PostDoEdit post_url content => Controller.post_do_edit is_logged post_url content
   | Request.Path.PostDoDelete post_url => Controller.post_do_delete is_logged post_url
   end.
 
