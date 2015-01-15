@@ -56,7 +56,8 @@ Module Answer.
     | PostAdd
     | PostDoAdd (is_success : bool)
     | PostEdit (url : LString.t) (post : option Post.t)
-    | PostDoEdit (url : LString.t) (is_success : bool).
+    | PostDoEdit (url : LString.t) (is_success : bool)
+    | PostDoDelete (is_success : bool).
   End Private.
 
   Inductive t :=

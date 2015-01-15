@@ -152,6 +152,13 @@ Module Controller.
         end
       | _ => C.Ret @@ Http.Answer.Private @@ Http.Answer.Private.PostDoEdit post_url false
       end.
+
+  Definition post_do_delete (is_logged : bool) (post_url : LString.t)
+    : C.t Http.Answer.t :=
+    if negb is_logged then
+      forbidden
+    else
+      C.Ret @@ Http.Answer.Private @@ Http.Answer.Private.PostDoDelete false.
 End Controller.
 
 Definition server (request : Http.Request.t) : C.t Http.Answer.t :=
@@ -177,6 +184,7 @@ Definition server (request : Http.Request.t) : C.t Http.Answer.t :=
       | "show" => Controller.post_show is_logged post_url
       | "edit" => Controller.post_edit is_logged post_url
       | "do_edit" => Controller.post_do_edit is_logged post_url args
+      | "do_delete" => Controller.post_do_delete is_logged post_url
       | _ => Controller.not_found
       end
     | _ => Controller.not_found

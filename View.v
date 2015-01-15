@@ -113,7 +113,9 @@ Module Content.
       let header := Post.header post in
       LString.s "<h1>" ++ Post.Header.title header ++
       (if is_logged then
-        LString.s " <small><a href=""/posts/edit/" ++ url ++ LString.s """>edit</a></small>"
+        LString.s "
+<small><a href=""/posts/edit/" ++ url ++ LString.s """>edit</a></small>
+<small><a href=""/posts/do_delete/" ++ url ++ LString.s """>delete</a></small>"
       else
         LString.s "") ++
       LString.s "</h1>
@@ -220,6 +222,14 @@ Module Content.
       "The post could not be updated.") ++
     LString.s "<p>
 <p><a href=""/posts/show/" ++ url ++ LString.s """>Back to the post.</a></p>".
+
+  Definition post_do_delete (is_success : bool) : LString.t :=
+    LString.s "<p>" ++
+    LString.s (if is_success then
+      "Post successfully removed."
+    else
+      "The post could not be removed.") ++
+    LString.s "<p>".
 End Content.
 
 Definition pack (root : LString.t) (is_logged : option bool)
@@ -250,5 +260,7 @@ Definition content (answer : Http.Answer.t) : LString.t :=
       pack (LString.s "../../") (Some true) @@ Content.post_edit url post
     | Http.Answer.Private.PostDoEdit url is_success =>
       pack (LString.s "../../") (Some true) @@ Content.post_do_edit url is_success
+    | Http.Answer.Private.PostDoDelete is_success =>
+      pack (LString.s "../../") (Some true) @@ Content.post_do_delete is_success
     end
   end.
