@@ -79,7 +79,6 @@ Definition list_posts (directory : LString.t)
 Fixpoint eval {A : Type} (x : C.t A) : Lwt.t A :=
   match x with
   | C.Ret x => Lwt.ret x
-  | C.Bind _ x f => Lwt.bind (eval x) (fun x => eval @@ f x)
   | C.Call (Command.ReadFile file_name) handler =>
     Lwt.bind (Lwt.read_file @@ String.of_lstring file_name) (fun content =>
     eval @@ handler @@ option_map String.to_lstring content)

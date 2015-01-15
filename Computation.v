@@ -25,23 +25,23 @@ End Command.
 Module C.
   Inductive t (A : Type) : Type :=
   | Ret : forall (x : A), t A
-  | Bind : forall {B : Type}, t B -> (B -> t A) -> t A
   | Call : forall (command : Command.t), (Command.answer command -> t A) -> t A.
   Arguments Ret {A} _.
-  Arguments Bind {A B} _ _.
   Arguments Call {A} _ _.
 
   Module Notations.
+    Definition apply {A B} (f : A -> B) (x : A) := f x.
+
     Notation "'let!' x ':=' X 'in' Y" :=
-      (Bind X (fun x => Y))
+      (apply X (fun x => Y))
       (at level 200, x ident, X at level 100, Y at level 200).
 
     Notation "'let!' x : A ':=' X 'in' Y" :=
-      (Bind X (fun (x : A) => Y))
+      (apply X (fun (x : A) => Y))
       (at level 200, x ident, X at level 100, A at level 200, Y at level 200).
 
     Notation "'do_let!' X 'in' Y" :=
-      (Bind X (fun _ => Y))
+      (apply X (fun _ => Y))
       (at level 200, X at level 100, Y at level 200).
 
     Notation "'call!' answer ':=' command 'in' X" :=

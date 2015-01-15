@@ -18,20 +18,22 @@ Definition posts_directory : LString.t :=
   LString.s "posts/".
 
 Module Helpers.
-  Definition post_header (post_url : LString.t) : C.t (option Post.Header.t) :=
+  Definition post_header {A : Type} (post_url : LString.t)
+    (k : option Post.Header.t -> C.t A) : C.t A :=
     call! posts := Command.ListPosts posts_directory in
-    C.Ret @@ Option.bind posts (fun posts =>
+    k @@ Option.bind posts (fun posts =>
     posts |> List.find (fun post =>
       LString.eqb (Post.Header.url post) post_url)).
 
-  Definition post (post_url : LString.t) : C.t (option Post.t) :=
+  Definition post {A : Type} (post_url : LString.t)
+    (k : option Post.t -> C.t A) : C.t A :=
     let! header := post_header post_url in
     match header with
-    | None => C.Ret None
+    | None => k None
     | Some header =>
       let file_name := posts_directory ++ Post.Header.file_name header in
       call! content := Command.ReadFile file_name in
-      C.Ret @@ Option.bind content (fun content =>
+      k @@ Option.bind content (fun content =>
       Some (Post.New header content))
     end.
 End Helpers.
@@ -123,23 +125,23 @@ Module Controller.
       let! post := Helpers.post post_url in
       C.Ret @@ Http.Answer.Private @@ Http.Answer.Private.PostEdit post_url post.
 
-  Definition post_do_edit (is_logged : bool) (post_url : LString.t) (args : Http.Arguments.t)
-    : C.t Http.Answer.t :=
+  Definition post_do_edit (is_logged : bool) (post_url : LString.t)
+    (args : Http.Arguments.t) : C.t Http.Answer.t :=
     if negb is_logged then
       forbidden
     else
-      let! is_success : bool :=
+      let! is_success : bool := fun k =>
         match Http.Arguments.find args @@ LString.s "content" with
         | Some [content] =>
           let! header := Helpers.post_header post_url in
           match header with
-          | None => C.Ret false
+          | None => k false
           | Some header =>
             let file_name := posts_directory ++ Post.Header.file_name header in
             call! is_success : bool := Command.UpdateFile file_name content in
-            C.Ret is_success
+            k is_success
           end
-        | _ => C.Ret false
+        | _ => k false
         end in
       C.Ret @@ Http.Answer.Private @@ Http.Answer.Private.PostDoEdit post_url is_success.
 
@@ -148,14 +150,14 @@ Module Controller.
     if negb is_logged then
       forbidden
     else
-      let! is_success :=
+      let! is_success := fun k =>
         let! header := Helpers.post_header post_url in
         match header with
-        | None => C.Ret false
+        | None => k false
         | Some header =>
           let file_name := posts_directory ++ Post.Header.file_name header in
           call! is_success : bool := Command.DeleteFile file_name in
-          C.Ret is_success
+          k is_success
         end in
       C.Ret @@ Http.Answer.Private @@ Http.Answer.Private.PostDoDelete is_success.
 End Controller.
