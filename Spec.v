@@ -5,7 +5,7 @@ Require Import ListString.All.
 Require Import Computation.
 Require Http.
 Require Main.
-Require Import Model.
+Require Request.
 
 Import ListNotations.
 Local Open Scope char.
@@ -20,7 +20,7 @@ End Run.
 
 Module RunRequest.
   Inductive t :=
-  | New : forall (request : Http.Request.t), Run.t (Main.server request) -> t.
+  | New : forall (request : Request.t), Run.t (Main.server request) -> t.
 End RunRequest.
 
 Module FiniteRun.
@@ -28,10 +28,10 @@ Module FiniteRun.
 End FiniteRun.
 
 Definition index : RunRequest.t.
-  apply (RunRequest.New (Http.Request.Get [] [] [])).
+  apply (RunRequest.New (Request.Get [] [] [])).
   simpl.
   apply (Run.Call (Command.Log _) tt).
-Defined.
+Admitted.
 
 (*
 (** Get one page and compare its result with `answer`. *)

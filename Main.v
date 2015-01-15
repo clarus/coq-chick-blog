@@ -5,9 +5,11 @@ Require Import ErrorHandlers.All.
 Require Import FunctionNinjas.All.
 Require Import ListString.All.
 Require Import Moment.All.
+Require Answer.
 Require Import Computation.
 Require Http.
 Require Import Model.
+Require Request.
 
 Import ListNotations.
 Import C.Notations.
@@ -39,11 +41,11 @@ Module Helpers.
 End Helpers.
 
 Module Controller.
-  Definition not_found : C.t Http.Answer.t :=
-    C.Ret Http.Answer.NotFound.
+  Definition not_found : C.t Answer.t :=
+    C.Ret Answer.NotFound.
 
-  Definition forbidden : C.t Http.Answer.t :=
-    C.Ret Http.Answer.Forbidden.
+  Definition forbidden : C.t Answer.t :=
+    C.Ret Answer.Forbidden.
 
   Definition mime_type (file_name : LString.t) : LString.t :=
     let extension := List.last (LString.split file_name ".") (LString.s "") in
@@ -56,44 +58,44 @@ Module Controller.
     | _ => "text/plain"
     end.
 
-  Definition static (path : list LString.t) : C.t Http.Answer.t :=
+  Definition static (path : list LString.t) : C.t Answer.t :=
     let mime_type := mime_type @@ List.last path (LString.s "") in
     let file_name := LString.join (LString.s "/") path in
     call! content := Command.ReadFile file_name in
     match content with
     | None => not_found
-    | Some content => C.Ret @@ Http.Answer.Static mime_type content
+    | Some content => C.Ret @@ Answer.Static mime_type content
     end.
 
-  Definition index (is_logged : bool) : C.t Http.Answer.t :=
+  Definition index (is_logged : bool) : C.t Answer.t :=
     call! posts := Command.ListPosts posts_directory in
     match posts with
     | None =>
       do_call! Command.Log (LString.s "Cannot open the " ++ posts_directory ++
         LString.s " directory.") in
-      C.Ret @@ Http.Answer.Public is_logged @@ Http.Answer.Public.Index []
-    | Some posts => C.Ret @@ Http.Answer.Public is_logged @@
-      Http.Answer.Public.Index posts
+      C.Ret @@ Answer.Public is_logged @@ Answer.Public.Index []
+    | Some posts => C.Ret @@ Answer.Public is_logged @@
+      Answer.Public.Index posts
     end.
 
-  Definition login : C.t Http.Answer.t :=
-    C.Ret Http.Answer.Login.
+  Definition login : C.t Answer.t :=
+    C.Ret Answer.Login.
 
-  Definition logout : C.t Http.Answer.t :=
-    C.Ret Http.Answer.Logout.
+  Definition logout : C.t Answer.t :=
+    C.Ret Answer.Logout.
 
-  Definition post_show (is_logged : bool) (post_url : LString.t) : C.t Http.Answer.t :=
+  Definition post_show (is_logged : bool) (post_url : LString.t) : C.t Answer.t :=
     let! post := Helpers.post post_url in
-    C.Ret @@ Http.Answer.Public is_logged @@ Http.Answer.Public.PostShow post_url post.
+    C.Ret @@ Answer.Public is_logged @@ Answer.Public.PostShow post_url post.
 
-  Definition post_add (is_logged : bool) : C.t Http.Answer.t :=
+  Definition post_add (is_logged : bool) : C.t Answer.t :=
     if negb is_logged then
       forbidden
     else
-      C.Ret @@ Http.Answer.Private Http.Answer.Private.PostAdd.
+      C.Ret @@ Answer.Private Answer.Private.PostAdd.
 
   Definition post_do_add (is_logged : bool) (args : Http.Arguments.t)
-    : C.t Http.Answer.t :=
+    : C.t Answer.t :=
     if negb is_logged then
       forbidden
     else
@@ -112,21 +114,21 @@ Module Controller.
           let file_name := LString.s "posts/" ++ Moment.Date.Print.date date ++
             LString.s " " ++ title ++ LString.s ".html" in
           call! is_success := Command.UpdateFile file_name (LString.s "") in
-          C.Ret @@ Http.Answer.Private @@ Http.Answer.Private.PostDoAdd is_success
-        | _ => C.Ret @@ Http.Answer.Private @@ Http.Answer.Private.PostDoAdd false
+          C.Ret @@ Answer.Private @@ Answer.Private.PostDoAdd is_success
+        | _ => C.Ret @@ Answer.Private @@ Answer.Private.PostDoAdd false
         end
-      | _ => C.Ret @@ Http.Answer.Private @@ Http.Answer.Private.PostDoAdd false
+      | _ => C.Ret @@ Answer.Private @@ Answer.Private.PostDoAdd false
       end.
 
-  Definition post_edit (is_logged : bool) (post_url : LString.t) : C.t Http.Answer.t :=
+  Definition post_edit (is_logged : bool) (post_url : LString.t) : C.t Answer.t :=
     if negb is_logged then
       forbidden
     else
       let! post := Helpers.post post_url in
-      C.Ret @@ Http.Answer.Private @@ Http.Answer.Private.PostEdit post_url post.
+      C.Ret @@ Answer.Private @@ Answer.Private.PostEdit post_url post.
 
   Definition post_do_edit (is_logged : bool) (post_url : LString.t)
-    (args : Http.Arguments.t) : C.t Http.Answer.t :=
+    (args : Http.Arguments.t) : C.t Answer.t :=
     if negb is_logged then
       forbidden
     else
@@ -143,10 +145,10 @@ Module Controller.
           end
         | _ => k false
         end in
-      C.Ret @@ Http.Answer.Private @@ Http.Answer.Private.PostDoEdit post_url is_success.
+      C.Ret @@ Answer.Private @@ Answer.Private.PostDoEdit post_url is_success.
 
   Definition post_do_delete (is_logged : bool) (post_url : LString.t)
-    : C.t Http.Answer.t :=
+    : C.t Answer.t :=
     if negb is_logged then
       forbidden
     else
@@ -159,12 +161,12 @@ Module Controller.
           call! is_success : bool := Command.DeleteFile file_name in
           k is_success
         end in
-      C.Ret @@ Http.Answer.Private @@ Http.Answer.Private.PostDoDelete is_success.
+      C.Ret @@ Answer.Private @@ Answer.Private.PostDoDelete is_success.
 End Controller.
 
-Definition server (request : Http.Request.t) : C.t Http.Answer.t :=
+Definition server (request : Request.t) : C.t Answer.t :=
   match request with
-  | Http.Request.Get path args cookies =>
+  | Request.Get path args cookies =>
     do_call! Command.Log (LString.s "GET /" ++ LString.join (LString.s "/") path) in
     let path := List.map LString.to_string path in
     let is_logged := Http.Cookies.is_logged cookies in

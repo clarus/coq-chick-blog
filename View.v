@@ -2,6 +2,7 @@ Require Import Coq.Lists.List.
 Require Import Coq.Strings.Ascii.
 Require Import FunctionNinjas.All.
 Require Import ListString.All.
+Require Answer.
 Require Http.
 Require Import Model.
 
@@ -68,16 +69,16 @@ Definition footer : LString.t :=
 </html>
 ".
 
-Definition mime_type (answer : Http.Answer.t) : LString.t :=
+Definition mime_type (answer : Answer.t) : LString.t :=
   match answer with
-  | Http.Answer.Static mime_type _ => mime_type
+  | Answer.Static mime_type _ => mime_type
   | _ => LString.s "text/html; charset=utf-8"
   end.
 
-Definition cookies (answer : Http.Answer.t) : Http.Cookies.t :=
+Definition cookies (answer : Answer.t) : Http.Cookies.t :=
   match answer with
-  | Http.Answer.Login => [(LString.s "is_logged", LString.s "true")]
-  | Http.Answer.Logout => [(LString.s "is_logged", LString.s "false")]
+  | Answer.Login => [(LString.s "is_logged", LString.s "true")]
+  | Answer.Logout => [(LString.s "is_logged", LString.s "false")]
   | _ => []
   end.
 
@@ -236,31 +237,31 @@ Definition pack (root : LString.t) (is_logged : option bool)
   (content : LString.t) : LString.t :=
   header root is_logged ++ content ++ footer.
 
-Definition content (answer : Http.Answer.t) : LString.t :=
+Definition content (answer : Answer.t) : LString.t :=
   match answer with
-  | Http.Answer.NotFound => LString.s "Not found."
-  | Http.Answer.Forbidden => LString.s "Forbidden."
-  | Http.Answer.Static _ content => content
-  | Http.Answer.Login => pack (LString.s "") None Content.login
-  | Http.Answer.Logout => pack (LString.s "") None Content.logout
-  | Http.Answer.Public is_logged page =>
+  | Answer.NotFound => LString.s "Not found."
+  | Answer.Forbidden => LString.s "Forbidden."
+  | Answer.Static _ content => content
+  | Answer.Login => pack (LString.s "") None Content.login
+  | Answer.Logout => pack (LString.s "") None Content.logout
+  | Answer.Public is_logged page =>
     match page with
-    | Http.Answer.Public.Index posts =>
+    | Answer.Public.Index posts =>
       pack (LString.s "") (Some is_logged) @@ Content.index is_logged posts
-    | Http.Answer.Public.PostShow url post =>
+    | Answer.Public.PostShow url post =>
       pack (LString.s "../../") (Some is_logged) @@ Content.post_show is_logged url post
     end
-  | Http.Answer.Private page =>
+  | Answer.Private page =>
     match page with
-    | Http.Answer.Private.PostAdd =>
+    | Answer.Private.PostAdd =>
       pack (LString.s "../") (Some true) @@ Content.post_add
-    | Http.Answer.Private.PostDoAdd is_success =>
+    | Answer.Private.PostDoAdd is_success =>
       pack (LString.s "../") (Some true) @@ Content.post_do_add is_success
-    | Http.Answer.Private.PostEdit url post =>
+    | Answer.Private.PostEdit url post =>
       pack (LString.s "../../") (Some true) @@ Content.post_edit url post
-    | Http.Answer.Private.PostDoEdit url is_success =>
+    | Answer.Private.PostDoEdit url is_success =>
       pack (LString.s "../../") (Some true) @@ Content.post_do_edit url is_success
-    | Http.Answer.Private.PostDoDelete is_success =>
+    | Answer.Private.PostDoDelete is_success =>
       pack (LString.s "../../") (Some true) @@ Content.post_do_delete is_success
     end
   end.
