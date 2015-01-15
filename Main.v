@@ -3,6 +3,7 @@ Require Import Coq.NArith.NArith.
 Require Import Coq.Strings.String.
 Require Import FunctionNinjas.All.
 Require Import ListString.All.
+Require Import Moment.All.
 Require Import Computation.
 Require Http.
 Require Import Model.
@@ -82,11 +83,31 @@ Module Controller.
     else
       C.Ret @@ Http.Answer.Private Http.Answer.Private.PostAdd.
 
-  Definition post_do_add (is_logged : bool) : C.t Http.Answer.t :=
+  Definition post_do_add (is_logged : bool) (args : Http.Arguments.t)
+    : C.t Http.Answer.t :=
     if negb is_logged then
       forbidden
     else
-      C.Ret @@ Http.Answer.Private @@ Http.Answer.Private.PostDoAdd false.
+      let title := Http.Arguments.find args @@ LString.s "title" in
+      let year := Http.Arguments.find args @@ LString.s "year" in
+      let month := Http.Arguments.find args @@ LString.s "month" in
+      let day := Http.Arguments.find args @@ LString.s "day" in
+      match (title, year, month, day) with
+      | (Some [title], Some [year], Some [month], Some [day]) =>
+        let year := Moment.Date.Parse.zero_padded_year 4 year in
+        let month := Moment.Date.Parse.zero_padded_month month in
+        let day := Moment.Date.Parse.zero_padded_day day in
+        match (year, month, day) with
+        | (Some (year, []), Some (month, []), Some (day, [])) =>
+          let date := Moment.Date.New year month day in
+          let file_name := LString.s "posts/" ++ Moment.Date.Print.date date ++
+            LString.s " " ++ title ++ LString.s ".html" in
+          let! is_success := Command.UpdateFile file_name (LString.s "") in
+          C.Ret @@ Http.Answer.Private @@ Http.Answer.Private.PostDoAdd is_success
+        | _ => C.Ret @@ Http.Answer.Private @@ Http.Answer.Private.PostDoAdd false
+        end
+      | _ => C.Ret @@ Http.Answer.Private @@ Http.Answer.Private.PostDoAdd false
+      end.
 
   Definition post_edit (is_logged : bool) (post_url : LString.t) : C.t Http.Answer.t :=
     if negb is_logged then
@@ -147,7 +168,7 @@ Definition server (request : Http.Request.t) : C.t Http.Answer.t :=
     | ["posts"; command] =>
       match command with
       | "add" => Controller.post_add is_logged
-      | "do_add" => Controller.post_do_add is_logged
+      | "do_add" => Controller.post_do_add is_logged args
       | _ => Controller.not_found
       end
     | ["posts"; command; post_url] =>

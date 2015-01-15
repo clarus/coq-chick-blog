@@ -61,7 +61,7 @@ Module Post.
       let (day, file_name') := x in
       let date := Date.New year month day in
       let extension := List.last (LString.split file_name' ".") (LString.s "") in
-      if LString.eqb extension @@ LString.s "md" then
+      if LString.eqb extension @@ LString.s "html" then
         let title := List.removelast (LString.split file_name' ".")
           |> LString.join []
           |> eat_spaces in
