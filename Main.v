@@ -158,7 +158,20 @@ Module Controller.
     if negb is_logged then
       forbidden
     else
-      C.Ret @@ Http.Answer.Private @@ Http.Answer.Private.PostDoDelete false.
+      let! posts := Command.ListPosts posts_directory in
+      match posts with
+      | None => C.Ret @@ Http.Answer.Private @@ Http.Answer.Private.PostDoDelete false
+      | Some posts =>
+        let header := posts |> List.find (fun post =>
+          LString.eqb (Post.Header.url post) post_url) in
+        match header with
+        | None => C.Ret @@ Http.Answer.Private @@ Http.Answer.Private.PostDoDelete false
+        | Some header =>
+          let file_name := posts_directory ++ Post.Header.file_name header in
+          let! is_success := Command.DeleteFile file_name in
+          C.Ret @@ Http.Answer.Private @@ Http.Answer.Private.PostDoDelete is_success
+        end
+      end.
 End Controller.
 
 Definition server (request : Http.Request.t) : C.t Http.Answer.t :=
