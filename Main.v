@@ -164,34 +164,33 @@ Module Controller.
       C.Ret @@ Answer.Private @@ Answer.Private.PostDoDelete is_success.
 End Controller.
 
-Definition server (request : Request.Raw.t) : C.t Answer.t :=
-  match request with
-  | Request.Raw.New path args cookies =>
-    do_call! Command.Log (LString.s "GET /" ++ LString.join (LString.s "/") path) in
-    let path := List.map LString.to_string path in
-    let is_logged := Http.Cookies.is_logged cookies in
-    match path with
-    | "static" :: _ => Controller.static (List.map LString.s path)
-    | [] => Controller.index is_logged
-    | ["login"] => Controller.login
-    | ["logout"] => Controller.logout
-    | ["posts"; command] =>
-      match command with
-      | "add" => Controller.post_add is_logged
-      | "do_add" => Controller.post_do_add is_logged args
-      | _ => Controller.not_found
-      end
-    | ["posts"; command; post_url] =>
-      let post_url := LString.s post_url in
-      match command with
-      | "show" => Controller.post_show is_logged post_url
-      | "edit" => Controller.post_edit is_logged post_url
-      | "do_edit" => Controller.post_do_edit is_logged post_url args
-      | "do_delete" => Controller.post_do_delete is_logged post_url
-      | _ => Controller.not_found
-      end
+Definition server (request : Request.t) : C.t Answer.t :=
+  let path := Request.path request in
+  let args := Request.args request in
+  let is_logged := Request.Cookies.is_logged @@ Request.cookies request in
+  do_call! Command.Log (LString.s "GET /" ++ LString.join (LString.s "/") path) in
+  let path := List.map LString.to_string path in
+  match path with
+  | "static" :: _ => Controller.static (List.map LString.s path)
+  | [] => Controller.index is_logged
+  | ["login"] => Controller.login
+  | ["logout"] => Controller.logout
+  | ["posts"; command] =>
+    match command with
+    | "add" => Controller.post_add is_logged
+    | "do_add" => Controller.post_do_add is_logged args
     | _ => Controller.not_found
     end
+  | ["posts"; command; post_url] =>
+    let post_url := LString.s post_url in
+    match command with
+    | "show" => Controller.post_show is_logged post_url
+    | "edit" => Controller.post_edit is_logged post_url
+    | "do_edit" => Controller.post_do_edit is_logged post_url args
+    | "do_delete" => Controller.post_do_delete is_logged post_url
+    | _ => Controller.not_found
+    end
+  | _ => Controller.not_found
   end.
 
 Require Extraction.

@@ -135,6 +135,6 @@ Extract Constant main_loop => "fun handler ->
 
 Definition main (handler : Request.t -> C.t Answer.t) : unit :=
   main_loop (fun request =>
-    let request := RawRequest.import request in
+    let request := Request.parse @@ RawRequest.import request in
     Lwt.bind (eval @@ handler request) (fun answer =>
     Lwt.ret @@ RawAnswer.export @@ Render.raw answer)).

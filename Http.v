@@ -30,10 +30,4 @@ Module Cookies.
 
   Fixpoint find (cookies : t) (key : LString.t) : option LString.t :=
     LStringMap.find cookies key.
-
-  Definition is_logged (cookies : t) : bool :=
-    match find cookies @@ LString.s "is_logged" with
-    | Some is_logged => LString.eqb is_logged @@ LString.s "true"
-    | None => false
-    end.
 End Cookies.
