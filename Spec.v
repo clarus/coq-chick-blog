@@ -31,6 +31,7 @@ End FiniteRun.
 
 Import Run.
 
+(** The index page when the list of posts is available. *)
 Definition index (cookies : Request.Cookies.t) : RunRequest.t.
   apply (RunRequest.New (Request.New Request.Path.Index cookies)).
   apply (Forge (list Post.Header.t)); intro post_headers.
@@ -38,4 +39,14 @@ Definition index (cookies : Request.Cookies.t) : RunRequest.t.
   exact (Ret (Answer.Public
     (Request.Cookies.is_logged @@ cookies)
     (Answer.Public.Index post_headers))).
+Defined.
+
+(** The index page when the list of posts is not available. *)
+Definition index_wrong (cookies : Request.Cookies.t) : RunRequest.t.
+  apply (RunRequest.New (Request.New Request.Path.Index cookies)).
+  apply (Call (Command.ListPosts _ ) None).
+  apply (Call (Command.Log _ ) tt).
+  exact (Ret (Answer.Public
+    (Request.Cookies.is_logged @@ cookies)
+    (Answer.Public.Index []))).
 Defined.
