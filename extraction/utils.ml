@@ -45,10 +45,7 @@ let list_files (directory : string) : string list option Lwt.t =
     Lwt.return @@ Some file_names))
     (fun _ -> Lwt.return None)
 
-let start_server
-  (handler : ((string list * (string * string list) list) * (string * string) list) ->
-    ((string * (string * string) list) * string) Lwt.t)
-  (port : int) : unit Lwt.t =
+let start_server handler (port : int) : unit Lwt.t =
   let callback (connection : Cohttp_lwt_unix.Server.conn)
     (request : Cohttp.Request.t) (body : Cohttp_lwt_body.t)
     : (Cohttp.Response.t * Cohttp_lwt_body.t) Lwt.t =

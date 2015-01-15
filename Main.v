@@ -164,9 +164,9 @@ Module Controller.
       C.Ret @@ Answer.Private @@ Answer.Private.PostDoDelete is_success.
 End Controller.
 
-Definition server (request : Request.t) : C.t Answer.t :=
+Definition server (request : Request.Raw.t) : C.t Answer.t :=
   match request with
-  | Request.Get path args cookies =>
+  | Request.Raw.New path args cookies =>
     do_call! Command.Log (LString.s "GET /" ++ LString.join (LString.s "/") path) in
     let path := List.map LString.to_string path in
     let is_logged := Http.Cookies.is_logged cookies in

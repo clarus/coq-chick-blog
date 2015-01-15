@@ -1,8 +1,10 @@
 Require Http.
 
-Inductive t :=
-| Get (path : list LString.t) (args : Http.Arguments.t) (cookies : Http.Cookies.t).
-
 Module Raw.
-  Definition t := t.
+  Record t := New {
+    path : list LString.t;
+    args : Http.Arguments.t;
+    cookies : Http.Cookies.t }.
 End Raw.
+
+Definition t := Raw.t.

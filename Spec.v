@@ -28,7 +28,7 @@ Module FiniteRun.
 End FiniteRun.
 
 Definition index : RunRequest.t.
-  apply (RunRequest.New (Request.Get [] [] [])).
+  apply (RunRequest.New (Request.Raw.New [] [] [])).
   simpl.
   apply (Run.Call (Command.Log _) tt).
 Admitted.

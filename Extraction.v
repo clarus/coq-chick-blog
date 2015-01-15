@@ -8,8 +8,8 @@ Require Import FunctionNinjas.All.
 Require Import ListString.All.
 Require Import Computation.
 Require Import Model.
+Require Render.
 Require Request.
-Require View.
 
 Import ListNotations.
 Local Open Scope type.
@@ -113,7 +113,7 @@ Module RawRequest.
       let cookies := cookies |> List.map (fun (cookie : _ * _) =>
         let (key, v) := cookie in
         (String.to_lstring key, String.to_lstring v)) in
-      Request.Get path args cookies
+      Request.Raw.New path args cookies
     end.
 End RawRequest.
 
@@ -137,4 +137,4 @@ Definition main (handler : Request.t -> C.t Answer.t) : unit :=
   main_loop (fun request =>
     let request := RawRequest.import request in
     Lwt.bind (eval @@ handler request) (fun answer =>
-    Lwt.ret @@ RawAnswer.export @@ View.raw answer)).
+    Lwt.ret @@ RawAnswer.export @@ Render.raw answer)).
