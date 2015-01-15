@@ -1,5 +1,5 @@
 # ChickBlog
-A blog engine written and proven in Coq.
+A blog engine written and proven in Coq (under development).
 
 ## Run
 Add the Coq repositories with [OPAM](https://opam.ocaml.org/):
