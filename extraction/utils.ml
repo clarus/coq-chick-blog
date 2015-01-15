@@ -50,6 +50,7 @@ let start_server handler (port : int) : unit Lwt.t =
     (request : Cohttp.Request.t) (body : Cohttp_lwt_body.t)
     : (Cohttp.Response.t * Cohttp_lwt_body.t) Lwt.t =
     let uri = Cohttp.Request.uri request in
+    Lwt.bind (Lwt_io.printl @@ Uri.path_and_query uri) (fun _ ->
     let path = Str.split (Str.regexp_string "/") @@ Uri.path uri in
     let args = Uri.query uri in
     let cookies = Cohttp.Request.headers request
@@ -60,7 +61,7 @@ let start_server handler (port : int) : unit Lwt.t =
       |> Cohttp.Cookie.Set_cookie_hdr.serialize) in
     let headers = Cohttp.Header.of_list
       (("content-type", mime_type) :: cookies) in
-    (Cohttp_lwt_unix.Server.respond_string ~headers:headers) `OK content ()) in
+    (Cohttp_lwt_unix.Server.respond_string ~headers:headers) `OK content ())) in
   let config = Cohttp_lwt_unix.Server.make callback () in
   Lwt.bind (Lwt_io.printlf "HTTP server starting on port %d." port) (fun _ ->
   Cohttp_lwt_unix.Server.create ~mode:(`TCP (`Port port)) config)

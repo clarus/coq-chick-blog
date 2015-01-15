@@ -60,7 +60,7 @@ Module Controller.
 
   Definition static (path : list LString.t) : C.t Answer.t :=
     let mime_type := mime_type @@ List.last path (LString.s "") in
-    let file_name := LString.join (LString.s "/") path in
+    let file_name := LString.s "static/" ++ LString.join (LString.s "/") path in
     call! content := Command.ReadFile file_name in
     match content with
     | None => not_found
@@ -168,29 +168,18 @@ Definition server (request : Request.t) : C.t Answer.t :=
   let path := Request.path request in
   let args := Request.args request in
   let is_logged := Request.Cookies.is_logged @@ Request.cookies request in
-  do_call! Command.Log (LString.s "GET /" ++ LString.join (LString.s "/") path) in
-  let path := List.map LString.to_string path in
   match path with
-  | "static" :: _ => Controller.static (List.map LString.s path)
-  | [] => Controller.index is_logged
-  | ["login"] => Controller.login
-  | ["logout"] => Controller.logout
-  | ["posts"; command] =>
-    match command with
-    | "add" => Controller.post_add is_logged
-    | "do_add" => Controller.post_do_add is_logged args
-    | _ => Controller.not_found
-    end
-  | ["posts"; command; post_url] =>
-    let post_url := LString.s post_url in
-    match command with
-    | "show" => Controller.post_show is_logged post_url
-    | "edit" => Controller.post_edit is_logged post_url
-    | "do_edit" => Controller.post_do_edit is_logged post_url args
-    | "do_delete" => Controller.post_do_delete is_logged post_url
-    | _ => Controller.not_found
-    end
-  | _ => Controller.not_found
+  | Request.Path.NotFound => Controller.not_found
+  | Request.Path.Static path => Controller.static path
+  | Request.Path.Index => Controller.index is_logged
+  | Request.Path.Login => Controller.login
+  | Request.Path.Logout => Controller.logout
+  | Request.Path.PostAdd => Controller.post_add is_logged
+  | Request.Path.PostDoAdd => Controller.post_do_add is_logged args
+  | Request.Path.PostShow post_url => Controller.post_show is_logged post_url
+  | Request.Path.PostEdit post_url => Controller.post_edit is_logged post_url
+  | Request.Path.PostDoEdit post_url => Controller.post_do_edit is_logged post_url args
+  | Request.Path.PostDoDelete post_url => Controller.post_do_delete is_logged post_url
   end.
 
 Require Extraction.
