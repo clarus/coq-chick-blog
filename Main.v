@@ -77,42 +77,48 @@ Module Controller.
     end.
 
   Definition post_edit (is_logged : bool) (post_url : LString.t) : C.t Http.Answer.t :=
-    let! posts := Command.ListPosts posts_directory in
-    match posts with
-    | None => C.Ret @@ Http.Answer.Private @@ Http.Answer.Private.PostEdit None
-    | Some posts =>
-      let header := posts |> List.find (fun post =>
-        LString.eqb (Post.Header.url post) post_url) in
-      match header with
-      | None => C.Ret @@ Http.Answer.Private @@ Http.Answer.Private.PostEdit None
-      | Some header =>
-        let file_name := posts_directory ++ Post.Header.file_name header in
-        let! content := Command.ReadFile file_name in
-        let post := content |> option_map (Post.New header) in
-        C.Ret @@ Http.Answer.Private @@ Http.Answer.Private.PostEdit post
-      end
-    end.
-
-  Definition post_update (is_logged : bool) (post_url : LString.t) (args : Http.Arguments.t)
-    : C.t Http.Answer.t :=
-    match Http.Arguments.find args @@ LString.s "content" with
-    | Some [content] =>
+    if negb is_logged then
+      forbidden
+    else
       let! posts := Command.ListPosts posts_directory in
       match posts with
-      | None => C.Ret @@ Http.Answer.Private @@ Http.Answer.Private.PostUpdate false
+      | None => C.Ret @@ Http.Answer.Private @@ Http.Answer.Private.PostEdit None
       | Some posts =>
         let header := posts |> List.find (fun post =>
           LString.eqb (Post.Header.url post) post_url) in
         match header with
-        | None => C.Ret @@ Http.Answer.Private @@ Http.Answer.Private.PostUpdate false
+        | None => C.Ret @@ Http.Answer.Private @@ Http.Answer.Private.PostEdit None
         | Some header =>
           let file_name := posts_directory ++ Post.Header.file_name header in
-          let! is_success := Command.UpdateFile file_name content in
-          C.Ret @@ Http.Answer.Private @@ Http.Answer.Private.PostUpdate is_success
+          let! content := Command.ReadFile file_name in
+          let post := content |> option_map (Post.New header) in
+          C.Ret @@ Http.Answer.Private @@ Http.Answer.Private.PostEdit post
         end
-      end
-    | _ => C.Ret @@ Http.Answer.Private @@ Http.Answer.Private.PostUpdate false
-    end.
+      end.
+
+  Definition post_update (is_logged : bool) (post_url : LString.t) (args : Http.Arguments.t)
+    : C.t Http.Answer.t :=
+    if negb is_logged then
+      forbidden
+    else
+      match Http.Arguments.find args @@ LString.s "content" with
+      | Some [content] =>
+        let! posts := Command.ListPosts posts_directory in
+        match posts with
+        | None => C.Ret @@ Http.Answer.Private @@ Http.Answer.Private.PostUpdate false
+        | Some posts =>
+          let header := posts |> List.find (fun post =>
+            LString.eqb (Post.Header.url post) post_url) in
+          match header with
+          | None => C.Ret @@ Http.Answer.Private @@ Http.Answer.Private.PostUpdate false
+          | Some header =>
+            let file_name := posts_directory ++ Post.Header.file_name header in
+            let! is_success := Command.UpdateFile file_name content in
+            C.Ret @@ Http.Answer.Private @@ Http.Answer.Private.PostUpdate is_success
+          end
+        end
+      | _ => C.Ret @@ Http.Answer.Private @@ Http.Answer.Private.PostUpdate false
+      end.
 End Controller.
 
 Definition server (request : Http.Request.t) : C.t Http.Answer.t :=

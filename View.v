@@ -104,12 +104,14 @@ Module Content.
     Post.Header.title post ++ LString.s "</a> " ++ date post ++ LString.s "</li>")) ++
   LString.s "</ul>".
 
-  Definition post_show (post : option Post.t) : LString.t :=
+  Definition post_show (is_logged : bool) (post : option Post.t) : LString.t :=
     match post with
     | None => LString.s "<p>Post not found.</p>"
     | Some post =>
       let header := Post.header post in
-      LString.s "<h1>" ++ Post.Header.title header ++ LString.s " <small><a href=""edit"">edit</a></small></h1>
+      LString.s "<h1>" ++ Post.Header.title header ++
+      LString.s (if is_logged then " <small><a href=""edit"">edit</a></small>" else "") ++
+      LString.s "</h1>
 <p><em>" ++ date header ++ LString.s "</em></p>
 " ++ Post.content post
     end.
@@ -155,7 +157,7 @@ Definition content (answer : Http.Answer.t) : LString.t :=
     | Http.Answer.Public.Index posts =>
       pack (LString.s "") (Some is_logged) @@ Content.index posts
     | Http.Answer.Public.PostShow post =>
-      pack (LString.s "../../") (Some is_logged) @@ Content.post_show post
+      pack (LString.s "../../") (Some is_logged) @@ Content.post_show is_logged post
     end
   | Http.Answer.Private page =>
     match page with
