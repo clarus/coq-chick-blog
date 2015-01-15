@@ -93,11 +93,13 @@ Module Content.
   Definition logout : LString.t :=
     LString.s "<p>You are logged out.</p>".
 
-  Definition index (posts : list Post.Header.t) : LString.t :=
+  Definition index (is_logged : bool) (posts : list Post.Header.t) : LString.t :=
     LString.s "<h1>Welcome</h1>
 <p>This is a blog written and proven in <a href=""https://coq.inria.fr/"">Coq</a>. The sources are on <a href=""https://github.com/clarus/coq-chick-blog"">GitHub</a>.</p>
 
-<h2>Posts</h2>
+<h2>Posts" ++
+  LString.s (if is_logged then " <small><a href=""/posts/add"">add</a></small>" else "") ++
+  LString.s "</h2>
 <ul>" ++
   LString.join [LString.Char.n] (posts |> List.map (fun post =>
     LString.s "<li><a href=""/posts/show/" ++ Post.Header.url post ++ LString.s """>" ++
@@ -158,7 +160,7 @@ Definition content (answer : Http.Answer.t) : LString.t :=
   | Http.Answer.Public is_logged page =>
     match page with
     | Http.Answer.Public.Index posts =>
-      pack (LString.s "") (Some is_logged) @@ Content.index posts
+      pack (LString.s "") (Some is_logged) @@ Content.index is_logged posts
     | Http.Answer.Public.PostShow url post =>
       pack (LString.s "../../") (Some is_logged) @@ Content.post_show is_logged url post
     end
