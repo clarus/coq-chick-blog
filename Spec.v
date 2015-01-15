@@ -16,7 +16,8 @@ Module Run.
   | Ret : forall (x : A), t (C.Ret x)
   | Call : forall (command : Command.t) (answer : Command.answer command)
     {handler : Command.answer command -> C.t A}, t (handler answer) ->
-    t (C.Call command handler).
+    t (C.Call command handler)
+  | Forge : forall (B : Type) {x : C.t A}, (B -> t x) -> t x.
 End Run.
 
 Module RunRequest.
@@ -28,13 +29,13 @@ Module FiniteRun.
   Definition t := list RunRequest.t.
 End FiniteRun.
 
-Definition index (cookies : Request.Cookies.t)
-  (post_headers : list Post.Header.t) : RunRequest.t.
+Import Run.
+
+Definition index (cookies : Request.Cookies.t) : RunRequest.t.
   apply (RunRequest.New (Request.New Request.Path.Index cookies)).
-  unfold Main.server; simpl.
-  unfold Main.Controller.index; simpl.
-  apply (Run.Call (Command.ListPosts _ ) (Some post_headers)).
-  exact (Run.Ret (Answer.Public
+  apply (Forge (list Post.Header.t)); intro post_headers.
+  apply (Call (Command.ListPosts _ ) (Some post_headers)).
+  exact (Ret (Answer.Public
     (Request.Cookies.is_logged @@ cookies)
     (Answer.Public.Index post_headers))).
 Defined.
