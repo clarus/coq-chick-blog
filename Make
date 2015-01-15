@@ -5,6 +5,5 @@ Extraction.v
 Http.v
 Main.v
 Model.v
-# Simulation.v
-# Spec.v
+Spec.v
 View.v

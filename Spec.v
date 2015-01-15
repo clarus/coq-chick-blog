@@ -6,10 +6,17 @@ Require Import Computation.
 Require Http.
 Require Main.
 Require Import Model.
-Require Import Simulation.
 
 Import ListNotations.
 Local Open Scope char.
+
+Module Run.
+  Inductive t {A : Type} : C.t A -> Type :=
+  | Ret : forall (x : A), t (C.Ret x)
+  | Call : forall (command : Command.t) (answer : Command.answer command)
+    {handler : Command.answer command -> C.t A}, t (handler answer) ->
+    t (C.Call command handler).
+End Run.
 
 Module RunRequest.
   Inductive t :=
@@ -20,6 +27,7 @@ Module FiniteRun.
   Definition t := list RunRequest.t.
 End FiniteRun.
 
+(*
 (** Get one page and compare its result with `answer`. *)
 Ltac static_page path args answer :=
   apply cons; [
@@ -50,4 +58,4 @@ Defined.
 
 Definition args (args : Arguments.t) : FiniteRun.t.
   static_page [LString.s "args"] args (Http.Answer.Args args).
-Defined.
+Defined.*)
