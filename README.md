@@ -14,6 +14,7 @@ Install the dependencies:
 
 Download the CSS:
 
+    mkdir -p extraction/static
     curl -L https://github.com/clarus/coq-red-css/releases/download/coq-blog.1.0.2/style.min.css >extraction/static/style.min.css
 
 Compile:
