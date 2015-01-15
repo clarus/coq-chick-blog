@@ -5,31 +5,37 @@ Require Import Model.
 
 Import ListNotations.
 
-Module Arguments.
-  Definition t := list (LString.t * list LString.t).
+Module LStringMap.
+  Definition t (A : Type) := list (LString.t * A).
 
-  Fixpoint find (args : t) (key : LString.t) : option (list LString.t) :=
-    match args with
+  Fixpoint find {A : Type} (map : t A) (key : LString.t) : option A :=
+    match map with
     | [] => None
-    | (key', values) :: args =>
+    | (key', val) :: map =>
       if LString.eqb key key' then
-        Some values
+        Some val
       else
-        find args key
+        find map key
     end.
+End LStringMap.
+
+Module Arguments.
+  Definition t := LStringMap.t (list LString.t).
+
+  Definition find (args : t) (key : LString.t) : option (list LString.t) :=
+    LStringMap.find args key.
 End Arguments.
 
 Module Cookies.
-  Definition t := list (LString.t * LString.t).
+  Definition t := LStringMap.t LString.t.
 
-  Fixpoint is_logged (cookies : t) : bool :=
-    match cookies with
-    | [] => false
-    | (key, val) :: cookies =>
-      if LString.eqb key @@ LString.s "is_logged" then
-        LString.eqb val @@ LString.s "true"
-      else
-        is_logged cookies
+  Fixpoint find (cookies : t) (key : LString.t) : option LString.t :=
+    LStringMap.find cookies key.
+
+  Definition is_logged (cookies : t) : bool :=
+    match find cookies @@ LString.s "is_logged" with
+    | Some is_logged => LString.eqb is_logged @@ LString.s "true"
+    | None => false
     end.
 End Cookies.
 
