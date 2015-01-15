@@ -54,7 +54,7 @@ Module Answer.
   Module Private.
     Inductive t :=
     | PostEdit (url : LString.t) (post : option Post.t)
-    | PostUpdate (url : LString.t) (is_success : bool).
+    | PostDoEdit (url : LString.t) (is_success : bool).
   End Private.
 
   Inductive t :=

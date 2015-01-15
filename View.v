@@ -128,7 +128,7 @@ Module Content.
       let header := Post.header post in
       LString.s "<h1>" ++ Post.Header.title header ++ LString.s "</h1>
 <p><em>" ++ date header ++ LString.s "</em></p>
-<form action=""/posts/update/" ++ url ++ LString.s """ method=""GET"">
+<form action=""/posts/do_edit/" ++ url ++ LString.s """ method=""GET"">
   <div class=""form-group"">
     <textarea class=""form-control"" name=""content"" rows=""5"">" ++ Post.content post ++ LString.s "</textarea>
   </div>
@@ -136,7 +136,7 @@ Module Content.
 </form>"
     end.
 
-  Definition post_update (url : LString.t) (is_success : bool) : LString.t :=
+  Definition post_do_edit (url : LString.t) (is_success : bool) : LString.t :=
     LString.s "<p>" ++
     LString.s (if is_success then
       "Post successfully updated."
@@ -168,7 +168,7 @@ Definition content (answer : Http.Answer.t) : LString.t :=
     match page with
     | Http.Answer.Private.PostEdit url post =>
       pack (LString.s "../../") (Some true) @@ Content.post_edit url post
-    | Http.Answer.Private.PostUpdate url is_success =>
-      pack (LString.s "../../") (Some true) @@ Content.post_update url is_success
+    | Http.Answer.Private.PostDoEdit url is_success =>
+      pack (LString.s "../../") (Some true) @@ Content.post_do_edit url is_success
     end
   end.

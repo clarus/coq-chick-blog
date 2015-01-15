@@ -96,7 +96,7 @@ Module Controller.
         end
       end.
 
-  Definition post_update (is_logged : bool) (post_url : LString.t) (args : Http.Arguments.t)
+  Definition post_do_edit (is_logged : bool) (post_url : LString.t) (args : Http.Arguments.t)
     : C.t Http.Answer.t :=
     if negb is_logged then
       forbidden
@@ -105,19 +105,19 @@ Module Controller.
       | Some [content] =>
         let! posts := Command.ListPosts posts_directory in
         match posts with
-        | None => C.Ret @@ Http.Answer.Private @@ Http.Answer.Private.PostUpdate post_url false
+        | None => C.Ret @@ Http.Answer.Private @@ Http.Answer.Private.PostDoEdit post_url false
         | Some posts =>
           let header := posts |> List.find (fun post =>
             LString.eqb (Post.Header.url post) post_url) in
           match header with
-          | None => C.Ret @@ Http.Answer.Private @@ Http.Answer.Private.PostUpdate post_url false
+          | None => C.Ret @@ Http.Answer.Private @@ Http.Answer.Private.PostDoEdit post_url false
           | Some header =>
             let file_name := posts_directory ++ Post.Header.file_name header in
             let! is_success := Command.UpdateFile file_name content in
-            C.Ret @@ Http.Answer.Private @@ Http.Answer.Private.PostUpdate post_url is_success
+            C.Ret @@ Http.Answer.Private @@ Http.Answer.Private.PostDoEdit post_url is_success
           end
         end
-      | _ => C.Ret @@ Http.Answer.Private @@ Http.Answer.Private.PostUpdate post_url false
+      | _ => C.Ret @@ Http.Answer.Private @@ Http.Answer.Private.PostDoEdit post_url false
       end.
 End Controller.
 
@@ -137,7 +137,7 @@ Definition server (request : Http.Request.t) : C.t Http.Answer.t :=
       match command with
       | "show" => Controller.post_show is_logged post_url
       | "edit" => Controller.post_edit is_logged post_url
-      | "update" => Controller.post_update is_logged post_url args
+      | "do_edit" => Controller.post_do_edit is_logged post_url args
       | _ => Controller.not_found
       end
     | _ => Controller.not_found
