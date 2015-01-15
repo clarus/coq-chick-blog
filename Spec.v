@@ -18,8 +18,8 @@ Module Run.
     {handler : Command.answer command -> C.t A} {x : A}, t (handler answer) x ->
     t (C.Call command handler) x.
 
-  Definition inversion_call : forall (A : Type) (command : Command.t)
-    (handler : Command.answer command -> C.t A) (x : A)
+  Definition inversion_call : forall {A : Type} {command : Command.t}
+    {handler : Command.answer command -> C.t A} {x : A}
     (run : t (C.Call command handler) x),
     {answer : Command.answer command & t (handler answer) x}.
     intros.
@@ -66,19 +66,19 @@ Definition if_not_logged_no_private_pages (path : Request.Path.t)
   destruct path; try (inversion run; reflexivity);
     unfold Main.server in run; simpl in run.
   - unfold Main.Controller.static in run.
-    destruct (inversion_call _ _ _ _ run) as [content run1].
+    destruct (inversion_call run) as [content run1].
     destruct content; inversion run1; reflexivity.
   - unfold Main.Controller.index in run.
-    destruct (inversion_call _ _ _ _ run) as [post_headers run1].
+    destruct (inversion_call run) as [post_headers run1].
     destruct post_headers.
     + inversion run1; reflexivity.
-    + destruct (inversion_call _ _ _ _ run1) as [tt run2].
+    + destruct (inversion_call run1) as [tt run2].
       inversion run2; reflexivity.
-  - destruct (inversion_call _ _ _ _ run) as [post_headers run1].
+  - destruct (inversion_call run) as [post_headers run1].
     destruct post_headers as [post_headers |].
     + simpl in run1.
       destruct (find _ @@ _).
-      * destruct (inversion_call _ _ _ _ run1) as [content run2].
+      * destruct (inversion_call run1) as [content run2].
         inversion run2; reflexivity.
       * inversion run1; reflexivity.
     + inversion run1; reflexivity.
