@@ -1,6 +1,7 @@
 Require Import Coq.Lists.List.
 Require Import Coq.NArith.NArith.
 Require Import Coq.Strings.String.
+Require Import ErrorHandlers.All.
 Require Import FunctionNinjas.All.
 Require Import ListString.All.
 Require Import Moment.All.
@@ -113,21 +114,23 @@ Module Controller.
     if negb is_logged then
       forbidden
     else
-      call! posts := Command.ListPosts posts_directory in
-      match posts with
-      | None => C.Ret @@ Http.Answer.Private @@ Http.Answer.Private.PostEdit post_url None
-      | Some posts =>
-        let header := posts |> List.find (fun post =>
-          LString.eqb (Post.Header.url post) post_url) in
-        match header with
-        | None => C.Ret @@ Http.Answer.Private @@ Http.Answer.Private.PostEdit post_url None
-        | Some header =>
-          let file_name := posts_directory ++ Post.Header.file_name header in
-          call! content := Command.ReadFile file_name in
-          let post := content |> option_map (Post.New header) in
-          C.Ret @@ Http.Answer.Private @@ Http.Answer.Private.PostEdit post_url post
-        end
-      end.
+      let! post : option Post.t :=
+        call! posts := Command.ListPosts posts_directory in
+        match posts with
+        | None => C.Ret None
+        | Some posts =>
+          let header := posts |> List.find (fun post =>
+            LString.eqb (Post.Header.url post) post_url) in
+          match header with
+          | None => C.Ret None
+          | Some header =>
+            let file_name := posts_directory ++ Post.Header.file_name header in
+            call! content := Command.ReadFile file_name in
+            C.Ret @@ Option.bind content (fun content =>
+            Some (Post.New header content))
+          end
+        end in
+      C.Ret @@ Http.Answer.Private @@ Http.Answer.Private.PostEdit post_url post.
 
   Definition post_do_edit (is_logged : bool) (post_url : LString.t) (args : Http.Arguments.t)
     : C.t Http.Answer.t :=

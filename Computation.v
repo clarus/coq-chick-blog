@@ -36,6 +36,10 @@ Module C.
       (Bind X (fun x => Y))
       (at level 200, x ident, X at level 100, Y at level 200).
 
+    Notation "'let!' x : A ':=' X 'in' Y" :=
+      (Bind X (fun (x : A) => Y))
+      (at level 200, x ident, X at level 100, A at level 200, Y at level 200).
+
     Notation "'do_let!' X 'in' Y" :=
       (Bind X (fun _ => Y))
       (at level 200, X at level 100, Y at level 200).
@@ -43,6 +47,10 @@ Module C.
     Notation "'call!' answer ':=' command 'in' X" :=
       (Call command (fun answer => X))
       (at level 200, answer ident, command at level 100, X at level 200).
+
+    Notation "'call!' answer : A ':=' command 'in' X" :=
+      (Call command (fun (answer : A) => X))
+      (at level 200, answer ident, command at level 100, A at level 200, X at level 200).
 
     Notation "'do_call!' command 'in' X" :=
       (Call command (fun _ => X))
