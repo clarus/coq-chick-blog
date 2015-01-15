@@ -191,6 +191,12 @@ Module Content.
   <button type=""submit"" class=""btn btn-default"">Submit</button>
 </form>".
 
+  Definition post_do_add (is_success : bool) : LString.t :=
+    if is_success then
+      LString.s "<p>Post successfully added.</p>"
+    else
+      LString.s "<p>The post could not be added.</p>".
+
   Definition post_edit (url : LString.t) (post : option Post.t) : LString.t :=
     match post with
     | None => LString.s "<p>Post not found.</p>"
@@ -222,8 +228,8 @@ Definition pack (root : LString.t) (is_logged : option bool)
 
 Definition content (answer : Http.Answer.t) : LString.t :=
   match answer with
-  | Http.Answer.NotFound => LString.s "<p>Not found.</p>"
-  | Http.Answer.Forbidden => LString.s "<p>Forbidden.</p>"
+  | Http.Answer.NotFound => LString.s "Not found."
+  | Http.Answer.Forbidden => LString.s "Forbidden."
   | Http.Answer.Static _ content => content
   | Http.Answer.Login => pack (LString.s "") None Content.login
   | Http.Answer.Logout => pack (LString.s "") None Content.logout
@@ -238,6 +244,8 @@ Definition content (answer : Http.Answer.t) : LString.t :=
     match page with
     | Http.Answer.Private.PostAdd =>
       pack (LString.s "../") (Some true) @@ Content.post_add
+    | Http.Answer.Private.PostDoAdd is_success =>
+      pack (LString.s "../") (Some true) @@ Content.post_do_add is_success
     | Http.Answer.Private.PostEdit url post =>
       pack (LString.s "../../") (Some true) @@ Content.post_edit url post
     | Http.Answer.Private.PostDoEdit url is_success =>

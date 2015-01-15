@@ -82,6 +82,12 @@ Module Controller.
     else
       C.Ret @@ Http.Answer.Private Http.Answer.Private.PostAdd.
 
+  Definition post_do_add (is_logged : bool) : C.t Http.Answer.t :=
+    if negb is_logged then
+      forbidden
+    else
+      C.Ret @@ Http.Answer.Private @@ Http.Answer.Private.PostDoAdd false.
+
   Definition post_edit (is_logged : bool) (post_url : LString.t) : C.t Http.Answer.t :=
     if negb is_logged then
       forbidden
@@ -141,6 +147,7 @@ Definition server (request : Http.Request.t) : C.t Http.Answer.t :=
     | ["posts"; command] =>
       match command with
       | "add" => Controller.post_add is_logged
+      | "do_add" => Controller.post_do_add is_logged
       | _ => Controller.not_found
       end
     | ["posts"; command; post_url] =>
