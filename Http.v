@@ -22,7 +22,7 @@ Module LStringMap.
     end.
 End LStringMap.
 
-(** The arguments as given at the end of an url. For example:
+(** The arguments as given at the end of an URL. For example:
     example.com/index.html?arg1=v11,v12&arg2=v2 *)
 Module Arguments.
   (** A map of keys to argument lists (the most common case is a list of one

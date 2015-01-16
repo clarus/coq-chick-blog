@@ -153,12 +153,12 @@ Module RawAnswer.
     (mime_type, cookies, content).
 End RawAnswer.
 
-(** The main infinite loop around the server handler. *)
+(** The infinite loop around the server handler. *)
 Parameter main_loop : (RawRequest.t -> Lwt.t RawAnswer.t) -> unit.
 Extract Constant main_loop => "fun handler ->
   Lwt_main.run (Utils.start_server handler 8008)".
 
-(** The server handler, with OCaml requests and answers. *)
+(** The function to extract to OCaml, parametrized by the server handler. *)
 Definition main (handler : Request.Path.t -> Request.Cookies.t-> C.t Answer.t)
   : unit :=
   main_loop (fun request =>

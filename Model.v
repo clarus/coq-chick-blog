@@ -1,3 +1,4 @@
+(** Definition of the data types, for now only the posts. *)
 Require Import Coq.Bool.Bool.
 Require Import Coq.Lists.List.
 Require Import Coq.NArith.NArith.
@@ -10,14 +11,19 @@ Require Import Moment.All.
 Import ListNotations.
 Local Open Scope char.
 
+(** A post from the user. *)
 Module Post.
+  (** The header of a post (everything except the content). *)
   Module Header.
+    (** A header is a title, a date, an URL (simplified title) and a file name.
+        The file name is the date followed by the title. *)
     Record t := New {
       title : LString.t;
       date : Moment.Date.t;
       url : LString.t;
       file_name : LString.t }.
 
+    (** Simplify a title to a readable URL. *)
     Fixpoint to_url (title : LString.t) : LString.t :=
       match title with
       | [] => []
@@ -50,6 +56,7 @@ Module Post.
       | _ => s
       end.
 
+    (** Try to parse a file name to a header. *)
     Definition of_file_name (file_name : LString.t) : option t :=
       Option.bind (Date.Parse.zero_padded_year 4 file_name) (fun x =>
       let (year, file_name') := x in
@@ -70,6 +77,7 @@ Module Post.
         None))))).
   End Header.
 
+  (** A post is a header and a content. *)
   Record t := New {
     header : Header.t;
     content : LString.t }.

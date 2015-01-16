@@ -1,3 +1,4 @@
+(** The main function (the server handler) and the controller. *)
 Require Import Coq.Lists.List.
 Require Import Coq.NArith.NArith.
 Require Import Coq.Strings.String.
@@ -16,10 +17,14 @@ Import C.Notations.
 Local Open Scope string.
 Local Open Scope list.
 
+(** The directory where posts are saved. *)
 Definition posts_directory : LString.t :=
   LString.s "posts/".
 
+(** Some helper functions for the controller. *)
 Module Helpers.
+  (** Try to find a post header from an URL. Expect a continuation (the next
+      computation to do), since there is no bind in out language. *)
   Definition post_header {A : Type} (post_url : LString.t)
     (k : option Post.Header.t -> C.t A) : C.t A :=
     call! posts := Command.ListPosts posts_directory in
@@ -27,6 +32,7 @@ Module Helpers.
     posts |> List.find (fun post =>
       LString.eqb (Post.Header.url post) post_url)).
 
+  (** Try to find a post from an URL. *)
   Definition post {A : Type} (post_url : LString.t)
     (k : option Post.t -> C.t A) : C.t A :=
     let! header := post_header post_url in
@@ -38,18 +44,8 @@ Module Helpers.
       k @@ Option.bind content (fun content =>
       Some (Post.New header content))
     end.
-End Helpers.
 
-Module Controller.
-  Definition not_found : C.t Answer.t :=
-    C.Ret Answer.NotFound.
-
-  Definition wrong_arguments : C.t Answer.t :=
-    C.Ret Answer.WrongArguments.
-
-  Definition forbidden : C.t Answer.t :=
-    C.Ret Answer.Forbidden.
-
+  (** Infer a MIME type from a file name. *)
   Definition mime_type (file_name : LString.t) : LString.t :=
     let extension := List.last (LString.split file_name ".") (LString.s "") in
     LString.s @@ match LString.to_string extension with
@@ -60,9 +56,25 @@ Module Controller.
     | "svg" => "image/svg+xml"
     | _ => "text/plain"
     end.
+End Helpers.
 
+(** The controller. *)
+Module Controller.
+  (** Page not found. *)
+  Definition not_found : C.t Answer.t :=
+    C.Ret Answer.NotFound.
+
+  (** The arguments of the page cannot be parsed. *)
+  Definition wrong_arguments : C.t Answer.t :=
+    C.Ret Answer.WrongArguments.
+
+  (** The page cannot be accessed without login. *)
+  Definition forbidden : C.t Answer.t :=
+    C.Ret Answer.Forbidden.
+
+  (** A static file in the `static/` folder. *)
   Definition static (path : list LString.t) : C.t Answer.t :=
-    let mime_type := mime_type @@ List.last path (LString.s "") in
+    let mime_type := Helpers.mime_type @@ List.last path (LString.s "") in
     let file_name := LString.s "static/" ++ LString.join (LString.s "/") path in
     call! content := Command.ReadFile file_name in
     match content with
@@ -70,6 +82,7 @@ Module Controller.
     | Some content => C.Ret @@ Answer.Static mime_type content
     end.
 
+  (** The index page. *)
   Definition index (is_logged : bool) : C.t Answer.t :=
     call! posts := Command.ListPosts posts_directory in
     match posts with
@@ -81,22 +94,27 @@ Module Controller.
       Answer.Public.Index posts
     end.
 
+  (** Confirmation that the user is logged in. *)
   Definition login : C.t Answer.t :=
     C.Ret Answer.Login.
 
+  (** Confirmation that the user is logged out. *)
   Definition logout : C.t Answer.t :=
     C.Ret Answer.Logout.
 
+  (** Show the content of a post. *)
   Definition post_show (is_logged : bool) (post_url : LString.t) : C.t Answer.t :=
     let! post := Helpers.post post_url in
     C.Ret @@ Answer.Public is_logged @@ Answer.Public.PostShow post_url post.
 
+  (** Show the the form to add a post. *)
   Definition post_add (is_logged : bool) : C.t Answer.t :=
     if negb is_logged then
       forbidden
     else
       C.Ret @@ Answer.Private Answer.Private.PostAdd.
 
+  (** Add a post and show a confirmation. *)
   Definition post_do_add (is_logged : bool) (title : LString.t)
     (date : Moment.Date.t) : C.t Answer.t :=
     if negb is_logged then
@@ -107,6 +125,7 @@ Module Controller.
       call! is_success := Command.UpdateFile file_name (LString.s "") in
       C.Ret @@ Answer.Private @@ Answer.Private.PostDoAdd is_success.
 
+  (** Show the form to edit a post. *)
   Definition post_edit (is_logged : bool) (post_url : LString.t) : C.t Answer.t :=
     if negb is_logged then
       forbidden
@@ -114,6 +133,7 @@ Module Controller.
       let! post := Helpers.post post_url in
       C.Ret @@ Answer.Private @@ Answer.Private.PostEdit post_url post.
 
+  (** Edit a post and show a confirmation. *)
   Definition post_do_edit (is_logged : bool) (post_url : LString.t)
     (content : LString.t) : C.t Answer.t :=
     if negb is_logged then
@@ -130,6 +150,7 @@ Module Controller.
         end in
       C.Ret @@ Answer.Private @@ Answer.Private.PostDoEdit post_url is_success.
 
+  (** Delete a post and show a confirmation. *)
   Definition post_do_delete (is_logged : bool) (post_url : LString.t)
     : C.t Answer.t :=
     if negb is_logged then
@@ -147,6 +168,7 @@ Module Controller.
       C.Ret @@ Answer.Private @@ Answer.Private.PostDoDelete is_success.
 End Controller.
 
+(** The main function, the server handler. *)
 Definition server (path : Request.Path.t) (cookies : Request.Cookies.t)
   : C.t Answer.t :=
   let is_logged := Request.Cookies.is_logged cookies in
@@ -158,13 +180,17 @@ Definition server (path : Request.Path.t) (cookies : Request.Cookies.t)
   | Request.Path.Login => Controller.login
   | Request.Path.Logout => Controller.logout
   | Request.Path.PostAdd => Controller.post_add is_logged
-  | Request.Path.PostDoAdd title date => Controller.post_do_add is_logged title date
+  | Request.Path.PostDoAdd title date =>
+    Controller.post_do_add is_logged title date
   | Request.Path.PostShow post_url => Controller.post_show is_logged post_url
   | Request.Path.PostEdit post_url => Controller.post_edit is_logged post_url
-  | Request.Path.PostDoEdit post_url content => Controller.post_do_edit is_logged post_url content
-  | Request.Path.PostDoDelete post_url => Controller.post_do_delete is_logged post_url
+  | Request.Path.PostDoEdit post_url content =>
+    Controller.post_do_edit is_logged post_url content
+  | Request.Path.PostDoDelete post_url =>
+    Controller.post_do_delete is_logged post_url
   end.
 
+(** Extract the server handler. *)
 Require Extraction.
 Definition main := Extraction.main server.
 Extraction "extraction/chickBlog" main.
