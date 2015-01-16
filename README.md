@@ -3,7 +3,7 @@ A blog engine written and proven in [Coq](https://coq.inria.fr/).
 
 This is a demo blog engine where an user can login (no passwords), add, edit or delete posts. The code is written mostly in Coq, compiled to OCaml and linked to the [CoHTTP](https://github.com/mirage/ocaml-cohttp) library to handle the HTTP protocol.
 
-The aim of this project is to demonstrate that applications with I/Os can be written and specified more naturally using the (new) concept of [symbolic simulations in Coq](http://coq-blog.clarus.me/checking-concurrent-programs-with-symbolic-simulations.html).
+The aim of this project is to demonstrate that applications with I/Os can be written and specified naturally using the (new) concept of [symbolic simulations in Coq](http://coq-blog.clarus.me/checking-concurrent-programs-with-symbolic-simulations.html).
 
 ## Run
 Add the Coq repositories with [OPAM](https://opam.ocaml.org/):
