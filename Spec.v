@@ -59,7 +59,7 @@ Definition is_private (answer : Answer.t) : bool :=
   end.
 
 (** We cannot access private pages without the logged-in cookie. *)
-Definition if_not_logged_no_private_pages (path : Request.Path.t)
+Lemma if_not_logged_no_private_pages (path : Request.Path.t)
   (answer : Answer.t)
   (run : Run.t (Main.server path Request.Cookies.LoggedOut) answer)
   : is_private answer = false.
@@ -82,7 +82,7 @@ Definition if_not_logged_no_private_pages (path : Request.Path.t)
         inversion run2; reflexivity.
       * inversion run1; reflexivity.
     + inversion run1; reflexivity.
-Defined.
+Qed.
 
 Module ReadOnly.
   Definition is_read (command : Command.t) : bool :=
@@ -91,10 +91,66 @@ Module ReadOnly.
     | _ => false
     end.
 
-  Inductive t {A : Type} : forall {x : C.t A} {v : A}, Run.t x v -> Prop :=
-  | Ret : forall (x : A), t (Run.Ret x)
+  Inductive t {A : Type} : C.t A -> Prop :=
+  | Ret : forall {x : A}, t (C.Ret x)
+  | Call : forall (command : Command.t)
+    (handler : Command.answer command -> C.t A),
+    is_read command = true ->
+    (forall (answer : Command.answer command), t (handler answer)) ->
+    t (C.Call command handler).
+
+
+
+  (*Fixpoint is_run_read {A : Type} {x : C.t A} {v : A} (run : Run.t x v) : bool :=
+    match run with
+    | Run.Ret _ => true
+    | Run.Call command _ _ _ run =>
+      andb (is_command_read command) (is_run_read run)
+    end.
+
+  Lemma if_not_logged_no_writes (path : Request.Path.t) (answer : Answer.t)
+    (run : Run.t (Main.server path Request.Cookies.LoggedOut) answer)
+    : is_run_read run = true.
+    destruct path.
+    - unfold Main.server in run; simpl in run.
+      unfold Main.Controller.not_found in run.
+      inversion run.
+
+    try apply Ret;
+      unfold Main.server in run; simpl in run.
+  Qed.
+
+  (*(*Inductive t {A : Type} {v : A} : forall {x : C.t A}, Run.t x v -> Prop :=
+  | Ret : forall (x : A) (run : Run.t (C.Ret x) v), t run
   | Call : forall (command : Command.t) (answer : Command.answer command)
     (handler : Command.answer command -> C.t A) (v : A)
     (run : Run.t (handler answer) v), is_read command = true -> t run ->
-    t (Run.Call command answer run).
+    t (Run.Call command answer run).*)
+
+  Lemma if_not_logged_no_writes (path : Request.Path.t) (answer : Answer.t)
+    (run : Run.t (Main.server path Request.Cookies.LoggedOut) answer) : t run.
+    destruct path; try apply Ret;
+      unfold Main.server in run; simpl in run.
+    - unfold Main.Controller.static in run.
+  Qed.
+
+  Inductive t {A : Type} {v : A} : forall {x : C.t A}, Run.t x v -> Prop :=
+  | Ret : forall (x : A) (run : Run.t (C.Ret x) v), t run
+  | Call : forall {command : Command.t} (answer : Command.answer command)
+    {handler : Command.answer command -> C.t A}
+    {run : Run.t (C.Call command handler) v} (run_handler : Run.t (handler answer) v),
+    is_read command = true -> t run_handler ->
+    t run.
+
+  Lemma if_not_logged_no_writes (path : Request.Path.t) (answer : Answer.t)
+    (run : Run.t (Main.server path Request.Cookies.LoggedOut) answer) : t run.
+    destruct path; try apply Ret;
+      unfold Main.server in run; simpl in run.
+    - unfold Main.Controller.static in run.
+      destruct (Run.inversion_call run) as [content run1].
+      apply (Call content run1); try reflexivity.
+      destruct content; apply Ret.
+    - admit.
+    - admit.
+  Qed.*)*)
 End ReadOnly.
