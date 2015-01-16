@@ -1,3 +1,4 @@
+(** Specifications. *)
 Require Import Coq.Lists.List.
 Require Import Coq.Strings.Ascii.
 Require Import FunctionNinjas.All.

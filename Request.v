@@ -1,3 +1,4 @@
+(** Requests from the client. *)
 Require Import Coq.Lists.List.
 Require Import Coq.Strings.String.
 Require Import FunctionNinjas.All.
@@ -8,6 +9,7 @@ Require Http.
 Import ListNotations.
 Local Open Scope string.
 
+(** Raw requests as given by the CoHTTP library. *)
 Module Raw.
   Record t := New {
     path : list LString.t;
@@ -15,6 +17,7 @@ Module Raw.
     cookies : Http.Cookies.t }.
 End Raw.
 
+(** Parsed path of a request, including the url with its arguments. *)
 Module Path.
   Inductive t :=
   | NotFound
@@ -29,6 +32,7 @@ Module Path.
   | PostDoEdit (post_url : LString.t) (content : LString.t)
   | PostDoDelete (post_url : LString.t).
 
+  (** Try to parse the arguments of a "/do_add" request. *)
   Definition parse_do_add_args (args : Http.Arguments.t)
     : option (LString.t * Moment.Date.t) :=
     let title := Http.Arguments.find args @@ LString.s "title" in
@@ -49,6 +53,8 @@ Module Path.
     | _ => None
     end.
 
+  (** Parse a request URL with its arguments. This function is a kind of
+      router. *)
   Definition parse (path : list LString.t) (args : Http.Arguments.t) : t :=
     match List.map LString.to_string path with
     | "static" :: path => Static (List.map LString.s path)
@@ -82,17 +88,21 @@ Module Path.
     end.
 End Path.
 
+(** Hight-level definition of cookies. *)
 Module Cookies.
+  (** Cookies can represent two states: logged in or logged out. *)
   Inductive t :=
   | LoggedIn
   | LoggedOut.
 
+  (** Test if the cookies mean that we are logged in. *)
   Definition is_logged (cookies : t) : bool :=
     match cookies with
     | LoggedIn => true
     | LoggedOut => false
     end.
 
+  (** Parse raw cookies given by the client. *)
   Definition parse (cookies : Http.Cookies.t) : t :=
     match Http.Cookies.find cookies @@ LString.s "is_logged" with
     | Some is_logged =>
@@ -104,6 +114,7 @@ Module Cookies.
     end.
 End Cookies.
 
+(** Parse the path and the cookies. *)
 Definition parse (request : Raw.t) : Path.t * Cookies.t := (
   Path.parse (Raw.path request) (Raw.args request),
   Cookies.parse (Raw.cookies request)).
