@@ -34,8 +34,8 @@ Module Run.
   Defined.
 End Run.
 
-(** Scenarios are parametrized runs of the programs. Type-checking scenarios
-    prove that the program is behaving as expected. Scenarios are more generic
+(** Scenarios are parametrized runs of computations. Type-checking scenarios
+    shows that a computation is behaving as expected. Scenarios are more generic
     than unit tests because some variables can be universally quantified. *)
 Module SimpleScenarios.
   Import Run.
@@ -59,7 +59,7 @@ Module SimpleScenarios.
       (Answer.Public.Index []).
     (* We ask to list the available posts. *)
     apply (Call (Command.ListPosts _ ) None).
-    (* We print an error message *)
+    (* We print an error message. *)
     apply (Call (Command.Log _ ) tt).
     (* The program terminates. *)
     apply Ret.
@@ -71,7 +71,7 @@ Module SimpleScenarios.
     : Run.t
       (Main.server (Request.Path.PostDoAdd title date) Request.Cookies.LoggedOut)
       Answer.Forbidden.
-    (* The program does no system call. *)
+    (* The program does no system calls. *)
     apply Ret.
   Defined.
 End SimpleScenarios.
@@ -95,7 +95,7 @@ Module ComplexScenarios.
   End RequestsRun.
 
   (** Run the `post_header` helper on the `post_header` URL for a list of posts
-      in the file system being `post_header :: post_headers`, given a run on
+      in the file system being `post_header :: post_headers`, given a run of
       the continuation. *)
   Definition helpers_post_header {A : Type} {k : option Post.Header.t -> C.t A}
     (post_header : Post.Header.t) (post_headers : list Post.Header.t) (x : A)
@@ -109,7 +109,7 @@ Module ComplexScenarios.
   Defined.
 
   (** Run the `post` helper on the `post_header` URL for a list of posts in the
-      file system being `post_header :: post_headers`, given a run on
+      file system being `post_header :: post_headers`, given a run of
       the continuation. *)
   Definition helpers_post {A : Type} {k : option Post.t -> C.t A}
     (post_header : Post.Header.t) (post_headers : list Post.Header.t)
@@ -123,7 +123,8 @@ Module ComplexScenarios.
     exact run_k.
   Defined.
 
-  (** Add, edit and read a post as an authenticated user. *)
+  (** Add, edit and read a post as an authenticated user. We check that we find
+      back the post content we edited. *)
   Definition write_and_read (title : LString.t) (date : Moment.Date.t)
     (content : LString.t) (post_headers : list Post.Header.t) : RequestsRun.t.
     refine (
@@ -201,7 +202,7 @@ Module PrivateAnswers.
   Qed.
 End PrivateAnswers.
 
-(** We check that an unauthenticated cannot modify the file system. *)
+(** We check that an unauthenticated user cannot modify the file system. *)
 Module ReadOnly.
   (** Test if a system call does not modify the file system. *)
   Definition is_read (command : Command.t) : bool :=
@@ -238,6 +239,6 @@ Module ReadOnly.
       simpl.
       destruct (find _ @@ _); try apply Ret.
       apply Call; try reflexivity.
-      intro answer; destruct answer; try apply Ret.
+      intro answer; destruct answer; apply Ret.
   Qed.
 End ReadOnly.
