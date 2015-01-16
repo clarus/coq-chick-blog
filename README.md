@@ -47,4 +47,14 @@ A computation can either:
 * return a pure value of type `A`
 * call an external command and wait for its result
 
-The purity of Coq ensures that each request is answered in finite time without errors. We specify the behavior of the server in `Spec.v`.
+The purity of Coq ensures that each request is answered in finite time without errors.
+
+We specify the behavior of the server in `Spec.v`.
+
+### Scenarios
+A scenario is a set of runs of the server. A type-checking scenario shows that the server behaves as expected in a certain use case. For example, we check that when we create, edit and view a post we get the same result as what we entered.
+
+You can think of a scenario as an unit test with universally quantified variables.
+
+### Privacy
+We check that, for any runs of a program, an unauthenticated user cannot access private pages (like edit) or modify the file system with system calls.
