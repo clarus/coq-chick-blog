@@ -34,16 +34,21 @@ Module Run.
   Defined.
 End Run.
 
+(** Scenarios are parametrized runs of the programs. Type-checking scenarios
+    prove that the program is behaving as expected. Scenarios are more generic
+    than unit tests because some variables can be universally quantified. *)
 Module SimpleScenarios.
   Import Run.
 
   (** The index page when the list of posts is available. *)
-  Definition index (cookies : Request.Cookies.t)
+  Definition index_ok (cookies : Request.Cookies.t)
     (post_headers : list Post.Header.t)
     : Run.t (Main.server Request.Path.Index cookies) @@ Answer.Public
       (Request.Cookies.is_logged @@ cookies)
       (Answer.Public.Index post_headers).
+    (* We ask to list the available posts. *)
     apply (Call (Command.ListPosts _ ) (Some post_headers)).
+    (* The program terminates. *)
     apply Ret.
   Defined.
 
@@ -52,8 +57,11 @@ Module SimpleScenarios.
     : Run.t (Main.server Request.Path.Index cookies) @@ Answer.Public
       (Request.Cookies.is_logged @@ cookies)
       (Answer.Public.Index []).
+    (* We ask to list the available posts. *)
     apply (Call (Command.ListPosts _ ) None).
+    (* We print an error message *)
     apply (Call (Command.Log _ ) tt).
+    (* The program terminates. *)
     apply Ret.
   Defined.
 
@@ -63,13 +71,16 @@ Module SimpleScenarios.
     : Run.t
       (Main.server (Request.Path.PostDoAdd title date) Request.Cookies.LoggedOut)
       Answer.Forbidden.
+    (* The program does no system call. *)
     apply Ret.
   Defined.
 End SimpleScenarios.
 
+(** Complex scenarios are scenarios over a list of successive requests. *)
 Module ComplexScenarios.
   Import Run.
 
+  (** The run of one request. *)
   Module RequestRun.
     Record t := New {
       path : Request.Path.t;
@@ -78,21 +89,28 @@ Module ComplexScenarios.
       run : Run.t (Main.server path cookies) answer }.
   End RequestRun.
 
+  (** A list of successive runs of requests. *)
   Module RequestsRun.
     Definition t := list RequestRun.t.
   End RequestsRun.
 
+  (** Run the `post_header` helper on the `post_header` URL for a list of posts
+      in the file system being `post_header :: post_headers`, given a run on
+      the continuation. *)
   Definition helpers_post_header {A : Type} {k : option Post.Header.t -> C.t A}
     (post_header : Post.Header.t) (post_headers : list Post.Header.t) (x : A)
     (run_k : Run.t (k (Some post_header)) x)
     : Run.t (Main.Helpers.post_header (Post.Header.url post_header) k) x.
     unfold Main.Helpers.post_header.
-    apply (Call (Command.ListPosts Main.posts_directory) (Some (post_header :: post_headers))).
+    apply (Call (Command.ListPosts _) (Some (post_header :: post_headers))).
     unfold apply; simpl.
     rewrite LString.eqb_same_is_eq.
     exact run_k.
   Defined.
 
+  (** Run the `post` helper on the `post_header` URL for a list of posts in the
+      file system being `post_header :: post_headers`, given a run on
+      the continuation. *)
   Definition helpers_post {A : Type} {k : option Post.t -> C.t A}
     (post_header : Post.Header.t) (post_headers : list Post.Header.t)
     (content : LString.t) (x : A)
@@ -100,11 +118,12 @@ Module ComplexScenarios.
     : Run.t (Main.Helpers.post (Post.Header.url post_header) k) x.
     apply (helpers_post_header post_header post_headers).
     apply (Call
-      (Command.ReadFile (Main.posts_directory ++ Post.Header.file_name post_header))
+      (Command.ReadFile (_ ++ Post.Header.file_name post_header))
       (Some content)).
     exact run_k.
   Defined.
 
+  (** Add, edit and read a post as an authenticated user. *)
   Definition write_and_read (title : LString.t) (date : Moment.Date.t)
     (content : LString.t) (post_headers : list Post.Header.t) : RequestsRun.t.
     refine (
@@ -144,6 +163,7 @@ Module ComplexScenarios.
   Defined.
 End ComplexScenarios.
 
+(** We check that only public pages are accessible without login. *)
 Module PrivateAnswers.
   (** Test if an answer has a private content. *)
   Definition is_private (answer : Answer.t) : bool :=
@@ -152,7 +172,9 @@ Module PrivateAnswers.
     | _ => false
     end.
 
-  (** We cannot access private pages without the logged-in cookie. *)
+  (** We cannot access private pages without the logged-in cookie. We check that
+      there is no runs with a logged out cookie to a private page. We reason by
+      disjunction over the path. *)
   Lemma if_not_logged_no_private_pages (path : Request.Path.t)
     (answer : Answer.t)
     (run : Run.t (Main.server path Request.Cookies.LoggedOut) answer)
@@ -179,13 +201,16 @@ Module PrivateAnswers.
   Qed.
 End PrivateAnswers.
 
+(** We check that an unauthenticated cannot modify the file system. *)
 Module ReadOnly.
+  (** Test if a system call does not modify the file system. *)
   Definition is_read (command : Command.t) : bool :=
     match command with
     | Command.ReadFile _ | Command.ListPosts _ | Command.Log _ => true
     | _ => false
     end.
 
+  (** The read-only predicate is defined inductively over a computation. *)
   Inductive t {A : Type} : C.t A -> Prop :=
   | Ret : forall {x : A}, t (C.Ret x)
   | Call : forall (command : Command.t)
@@ -194,6 +219,8 @@ Module ReadOnly.
     (forall (answer : Command.answer command), t (handler answer)) ->
     t (C.Call command handler).
 
+  (** We show that we cannot modify the file system if not logged by disjunction
+      over the path. *)
   Lemma if_not_logged_no_writes (path : Request.Path.t)
     : t (Main.server path Request.Cookies.LoggedOut).
     destruct path; try apply Ret; unfold Main.server.
