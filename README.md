@@ -1,5 +1,5 @@
 # ChickBlog
-A blog engine written and proven in Coq.
+A blog engine written and proven in [Coq](https://coq.inria.fr/).
 
 This is a demo blog engine where an user can login (no passwords), add, edit or delete posts. The code is written mostly in Coq, compiled to OCaml and linked to the [CoHTTP](https://github.com/mirage/ocaml-cohttp) library to handle the HTTP protocol.
 
@@ -42,7 +42,7 @@ It handles an HTTP request and generate an answer using system calls to the file
     | Ret : forall (x : A), t A
     | Call : forall (command : Command.t), (Command.answer command -> t A) -> t A.
 
-We can either:
+It can either:
 
 * return a pure value of type `A`
 * call an external command and wait for its result
