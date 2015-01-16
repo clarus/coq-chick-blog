@@ -30,8 +30,7 @@ Run on [localhost:8008](http://localhost:8008/):
 ## Specification
 The blog is defined in `Main.v` as the function:
 
-    Definition server (path : Request.Path.t) (cookies : Request.Cookies.t)
-      : C.t Answer.t.
+    Definition server (path : Request.Path.t) (cookies : Request.Cookies.t) : C.t Answer.t.
 
 It handles an HTTP request and generate an answer using system calls to the file system. The type `C.t A` represents a computation doing I/O operations:
 
