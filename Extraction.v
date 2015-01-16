@@ -1,3 +1,4 @@
+(** Extraction to OCaml. New primitives are defined in `extraction/utils.ml`. *)
 Require Import Coq.Lists.List.
 Require Import Coq.ZArith.ZArith.
 Require Import ExtrOcamlBasic.
@@ -14,13 +15,17 @@ Require Request.
 Import ListNotations.
 Local Open Scope type.
 
+(** Interface with the OCaml strings. *)
 Module String.
+  (** The OCaml `string` type. *)
   Parameter t : Type.
   Extract Constant t => "string".
 
+  (** Export to an OCaml string. *)
   Parameter of_lstring : LString.t -> t.
   Extract Constant of_lstring => "Utils.String.of_lstring".
 
+  (** Import an OCaml string. *)
   Parameter to_lstring : t -> LString.t.
   Extract Constant to_lstring => "Utils.String.to_lstring".
 End String.
@@ -34,42 +39,53 @@ Module BigInt.
   Definition to_Z : t -> Z := z_of_bigint.
 End BigInt.
 
+(** Interface to the Lwt library. *)
 Module Lwt.
+  (** The `Lwt.t` type. *)
   Parameter t : Type -> Type.
   Extract Constant t "'a" => "'a Lwt.t".
 
+  (** Return. *)
   Parameter ret : forall {A : Type}, A -> t A.
   Extract Constant ret => "Lwt.return".
 
+  (** Bind. *)
   Parameter bind : forall {A B : Type}, t A -> (A -> t B) -> t B.
   Extract Constant bind => "Lwt.bind".
 
+  (** Run. *)
   Parameter run : forall {A : Type}, t A -> A.
   Extract Constant run => "Lwt_main.run".
 
+  (** Print a new line. *)
   Parameter printl : String.t -> t unit.
   Extract Constant printl => "Lwt_io.printl".
 
+  (** The the content of a file. *)
   Parameter read_file : String.t -> t (option String.t).
   Extract Constant read_file => "Utils.read_file".
 
+  (** Update (or create) a file with some content. *)
   Parameter update_file : String.t -> String.t -> t bool.
   Extract Constant update_file => "Utils.update_file".
 
+  (** Delete a file. *)
   Parameter delete_file : String.t -> t bool.
   Extract Constant delete_file => "Utils.delete_file".
 
+  (** List the files of a directory. *)
   Parameter list_files : String.t -> t (option (list String.t)).
   Extract Constant list_files => "Utils.list_files".
 End Lwt.
 
+(** Parse a list of files to a list of post headers. *)
 Definition list_posts (directory : LString.t)
   : Lwt.t (option (list Post.Header.t)) :=
   Lwt.bind (Lwt.list_files @@ String.of_lstring directory) (fun file_names =>
   Lwt.ret @@ file_names |> option_map (fun file_names =>
   let posts := file_names |> List.map (fun file_name =>
     Post.Header.of_file_name @@ String.to_lstring file_name) in
-  (* We removed the elements `None`. *)
+  (* We remove the `None` elements. *)
   List.fold_left (fun posts post =>
     match post with
     | None => posts
@@ -77,6 +93,7 @@ Definition list_posts (directory : LString.t)
     end)
     posts [])).
 
+(** Evaluate a Coq computation to an Lwt expression. *)
 Fixpoint eval {A : Type} (x : C.t A) : Lwt.t A :=
   match x with
   | C.Ret x => Lwt.ret x
@@ -100,9 +117,13 @@ Fixpoint eval {A : Type} (x : C.t A) : Lwt.t A :=
     eval @@ handler tt)
   end.
 
+(** Requests as given by CoHTTP using OCaml strings. *)
 Module RawRequest.
-  Definition t := list String.t * list (String.t * list String.t) * list (String.t * String.t).
+  (** A request is an url, a list of arguments and some cookies. *)
+  Definition t := list String.t * list (String.t * list String.t) *
+    list (String.t * String.t).
 
+  (** Import a request importing OCaml strings. *)
   Definition import (request : t) : Request.Raw.t :=
     match request with
     | (path, args, cookies) =>
@@ -117,9 +138,12 @@ Module RawRequest.
     end.
 End RawRequest.
 
+(** Answers as given to CoHTTP using OCaml strings. *)
 Module RawAnswer.
+  (** An answer a MIME type, some cookies and a body. *)
   Definition t := String.t * list (String.t * String.t) * String.t.
 
+  (** Export a raw request exporting OCaml strings. *)
   Definition export (answer : Answer.Raw.t) : t :=
     let mime_type := String.of_lstring @@ Answer.Raw.mime_type answer in
     let cookies := Answer.Raw.cookies answer |> List.map (fun (cookie : _ * _) =>
@@ -129,10 +153,12 @@ Module RawAnswer.
     (mime_type, cookies, content).
 End RawAnswer.
 
+(** The main infinite loop around the server handler. *)
 Parameter main_loop : (RawRequest.t -> Lwt.t RawAnswer.t) -> unit.
 Extract Constant main_loop => "fun handler ->
   Lwt_main.run (Utils.start_server handler 8008)".
 
+(** The server handler, with OCaml requests and answers. *)
 Definition main (handler : Request.Path.t -> Request.Cookies.t-> C.t Answer.t)
   : unit :=
   main_loop (fun request =>

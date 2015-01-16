@@ -13,7 +13,7 @@ Module Command.
   | UpdateFile (file_name : LString.t) (content : LString.t)
   (** Delete a file. *)
   | DeleteFile (file_name : LString.t)
-  (** List the posts in the `posts/` folder (as a list of `Post.Header.t`,
+  (** List the posts in the `posts/` folder (as a list of post headers,
       obtained after parsing). *)
   | ListPosts (directory : LString.t)
   (** Write a message on the standard output. *)
