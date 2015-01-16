@@ -42,7 +42,7 @@ It handles an HTTP request and generate an answer using system calls to the file
     | Ret : forall (x : A), t A
     | Call : forall (command : Command.t), (Command.answer command -> t A) -> t A.
 
-It can either:
+A computation can either:
 
 * return a pure value of type `A`
 * call an external command and wait for its result
