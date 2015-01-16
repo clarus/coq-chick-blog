@@ -51,6 +51,88 @@ Definition index_wrong (cookies : Request.Cookies.t)
   apply Ret.
 Defined.
 
+(** It is not possible to add a post if not logged in. *)
+Definition if_not_logged_add_is_forbidden (title : LString.t)
+  (date : Moment.Date.t)
+  : Run.t
+    (Main.server (Request.Path.PostDoAdd title date) Request.Cookies.LoggedOut)
+    Answer.Forbidden.
+  apply Ret.
+Defined.
+
+Module RequestRun.
+  Record t := New {
+    path : Request.Path.t;
+    cookies : Request.Cookies.t;
+    answer : Answer.t;
+    run : Run.t (Main.server path cookies) answer }.
+End RequestRun.
+
+Module RequestsRun.
+  Definition t := list RequestRun.t.
+End RequestsRun.
+
+Definition helpers_post_header {A : Type} {k : option Post.Header.t -> C.t A}
+  (post_header : Post.Header.t) (post_headers : list Post.Header.t) (x : A)
+  (run_k : Run.t (k (Some post_header)) x)
+  : Run.t (Main.Helpers.post_header (Post.Header.url post_header) k) x.
+  unfold Main.Helpers.post_header.
+  apply (Call (Command.ListPosts Main.posts_directory) (Some (post_header :: post_headers))).
+  unfold apply; simpl.
+  rewrite LString.eqb_same_is_eq.
+  exact run_k.
+Defined.
+
+Definition helpers_post {A : Type} {k : option Post.t -> C.t A}
+  (post_header : Post.Header.t) (post_headers : list Post.Header.t)
+  (content : LString.t) (x : A)
+  (run_k : Run.t (k (Some (Post.New post_header content))) x)
+  : Run.t (Main.Helpers.post (Post.Header.url post_header) k) x.
+  apply (helpers_post_header post_header post_headers).
+  apply (Call
+    (Command.ReadFile (Main.posts_directory ++ Post.Header.file_name post_header))
+    (Some content)).
+  exact run_k.
+Defined.
+
+Definition write_and_read (title : LString.t) (date : Moment.Date.t)
+  (content : LString.t) (post_headers : list Post.Header.t) : RequestsRun.t.
+  refine (
+    let url := Model.Post.Header.to_url title in
+    let file_name := Moment.Date.Print.date date ++ LString.s " " ++ title ++
+      LString.s ".html" in
+    let post_header := Post.Header.New title date url file_name in
+    let post := Post.New post_header content in _).
+  (* /do_add *)
+  apply cons.
+  apply (RequestRun.New
+    (Request.Path.PostDoAdd title date) Request.Cookies.LoggedIn
+    (Answer.Private (Answer.Private.PostDoAdd true))).
+  apply (Call
+    (Command.UpdateFile (Main.posts_directory ++ file_name) (LString.s ""))
+    true).
+  apply Ret.
+  (* /posts/do_edit *)
+  apply cons.
+  apply (RequestRun.New
+    (Request.Path.PostDoEdit url content) Request.Cookies.LoggedIn
+    (Answer.Private (Answer.Private.PostDoEdit url true))).
+  apply (helpers_post_header post_header post_headers).
+  apply (Call
+    (Command.UpdateFile (Main.posts_directory ++ file_name) content)
+    true).
+  apply Ret.
+  (* /posts/show *)
+  apply cons.
+  apply (RequestRun.New
+    (Request.Path.PostShow url) Request.Cookies.LoggedIn
+    (Answer.Public true (Answer.Public.PostShow url (Some post)))).
+  apply (helpers_post post_header post_headers content).
+  apply Ret.
+  (* end *)
+  apply nil.
+Defined.
+
 (** Test if an answer has a private content. *)
 Definition is_private (answer : Answer.t) : bool :=
   match answer with
