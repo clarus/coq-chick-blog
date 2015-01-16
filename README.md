@@ -1,6 +1,8 @@
 # ChickBlog
 A blog engine written and proven in Coq.
 
+This is a demo blog engine where an user can login (no passwords), add, edit or delete posts. The aim of this project is to demonstrate that the concept of [symbolic simulations in Coq](http://coq-blog.clarus.me/checking-concurrent-programs-with-symbolic-simulations.html) allows to develop and specify applications with I/Os more naturally than with previous approaches.
+
 ## Run
 Add the Coq repositories with [OPAM](https://opam.ocaml.org/):
 
