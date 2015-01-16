@@ -36,8 +36,8 @@ Definition header (is_logged : option bool) : LString.t :=
   match is_logged with
   | None => LString.s ""
   | Some is_logged => LString.s "
-        <div class=""collapse navbar-collapse"" id=""bs-example-navbar-collapse-1"">
-          <ul class=""nav navbar-nav navbar-right"">
+        <div class=""collapse navbar-collapse"">
+          <ul class=""nav navbar-nav"">
             <li><a href=""" ++
   LString.s (if is_logged then "/logout" else "/login") ++ LString.s """>" ++
   LString.s (if is_logged then "Logout" else "Login") ++
@@ -97,16 +97,17 @@ Definition date (post_header : Post.Header.t) : LString.t :=
 Module Content.
   (** The confirmation of a login. *)
   Definition login : LString.t :=
-    LString.s "<p>You are logged in.</p>".
+    LString.s "<p>You are now logged in.</p>".
 
   (** The confirmation of a logout. *)
   Definition logout : LString.t :=
-    LString.s "<p>You are logged out.</p>".
+    LString.s "<p>You are now logged out.</p>".
 
   (** The index page, with the list of posts. *)
   Definition index (is_logged : bool) (posts : list Post.Header.t) : LString.t :=
     LString.s "<h1>Welcome</h1>
-<p>This is a blog written and proven in <a href=""https://coq.inria.fr/"">Coq</a>. The sources are on <a href=""https://github.com/clarus/coq-chick-blog"">GitHub</a>.</p>
+<p>This is a blog written and proven in <a href=""https://coq.inria.fr/"">Coq</a>. The sources are on <a href=""https://github.com/clarus/coq-chick-blog"">GitHub</a>.</p>" ++
+    LString.s (if is_logged then "" else "<p><em>You can login to add, edit or remove posts.</em></p>") ++ LString.s "
 
 <h2>Posts" ++
   LString.s (if is_logged then " <small><a href=""/posts/add"">add</a></small>" else "") ++
