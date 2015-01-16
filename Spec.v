@@ -83,3 +83,18 @@ Definition if_not_logged_no_private_pages (path : Request.Path.t)
       * inversion run1; reflexivity.
     + inversion run1; reflexivity.
 Defined.
+
+Module ReadOnly.
+  Definition is_read (command : Command.t) : bool :=
+    match command with
+    | Command.ReadFile _ | Command.ListPosts _ | Command.Log _ => true
+    | _ => false
+    end.
+
+  Inductive t {A : Type} : forall {x : C.t A} {v : A}, Run.t x v -> Prop :=
+  | Ret : forall (x : A), t (Run.Ret x)
+  | Call : forall (command : Command.t) (answer : Command.answer command)
+    (handler : Command.answer command -> C.t A) (v : A)
+    (run : Run.t (handler answer) v), is_read command = true -> t run ->
+    t (Run.Call command answer run).
+End ReadOnly.
