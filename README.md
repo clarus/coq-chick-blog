@@ -33,7 +33,7 @@ The blog is defined in `Main.v` as the function:
     Definition server (path : Request.Path.t) (cookies : Request.Cookies.t)
       : C.t Answer.t.
 
-It handles an HTTP request and generate an answer using system calls to the file system. The type `C.t A` represents computations of type `A` doing I/O operations:
+It handles an HTTP request and generate an answer using system calls to the file system. The type `C.t A` represents a computation doing I/O operations:
 
     Inductive t (A : Type) : Type :=
     | Ret : forall (x : A), t A
@@ -41,7 +41,7 @@ It handles an HTTP request and generate an answer using system calls to the file
 
 We can either:
 
-* return a pure value
+* return a pure value of type `A`
 * call an external command and wait for its result
 
-The purity of Coq ensures that each request is answered in finite time with no errors. We specify the behavior of the server in `Spec.v`.
+The purity of Coq ensures that each request is answered in finite time without errors. We specify the behavior of the server in `Spec.v`.
