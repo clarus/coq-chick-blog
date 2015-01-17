@@ -50,9 +50,24 @@ A computation can either:
 The purity of Coq ensures that each request is answered in finite time without exceptions. We specify the behavior of the server in `Spec.v`.
 
 ### Scenarios
-A scenario is a set of runs of the server. A type-checking scenario shows that the server behaves as expected in a certain use case. For example, we check that when we create, edit and view a post we get the same result as what we entered.
+A scenario is a set of runs of the server. A type-checking scenario shows that the server behaves as expected in a certain use case. For example, we check that when we create, edit and view a post we get the same result as what we entered. You can think of a scenario as an unit test with universally quantified variables.
 
-You can think of a scenario as an unit test with universally quantified variables.
+For example, here is a simple check of the execution of the index page:
+
+    (** The index page when the list of posts is available. *)
+    Definition index_ok (cookies : Request.Cookies.t) (post_headers : list Post.Header.t)
+      : Run.t (Main.server Request.Path.Index cookies)
+        (Answer.Public
+          (Request.Cookies.is_logged cookies)
+          (* The answer will include the `post_headers`. *)
+          (Answer.Public.Index post_headers)).
+      (* The handler asks the list of available posts. We return `post_headers`. *)
+      apply (Call (Command.ListPosts _ ) (Some post_headers)).
+      (* The handler terminates without other system calls. *)
+      apply Ret.
+    Defined.
+
+Given any `cookies` and `post_headers`, we execute the server handler on the page `Request.Path.Index`. The handler does exactly one system call, to which we answer `Some post_headers`, playing the role of the system. The final answer of the server is then `Answer.Public.Index post_headers`. Note that we do not need to execute `index_ok` on every instances of `cookies` and `post_headers`: since the type-system of Coq is supposed sound, it is enough to type-check `index_ok`.
 
 ### Privacy
 We check that, for any runs of a program, an unauthenticated user cannot access private pages (like edit) or modify the file system with system calls.

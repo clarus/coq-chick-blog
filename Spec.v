@@ -49,7 +49,7 @@ Module SimpleScenarios.
           (Request.Cookies.is_logged cookies)
           (* The answer will include the `post_headers`. *)
           (Answer.Public.Index post_headers)).
-      (* The handler asks list of available posts. We return `post_headers`. *)
+      (* The handler asks the list of available posts. We return `post_headers`. *)
       apply (Call (Command.ListPosts _ ) (Some post_headers)).
       (* The handler terminates without other system calls. *)
       apply Ret.
@@ -61,7 +61,7 @@ Module SimpleScenarios.
         (Answer.Public
           (Request.Cookies.is_logged cookies)
           (Answer.Public.Index [])).
-      (* The handler asks list of available posts. We return `None`. *)
+      (* The handler asks the list of available posts. We return `None`. *)
       apply (Call (Command.ListPosts _ ) None).
       (* The handler prints an error message. *)
       apply (Call (Command.Log _ ) tt).
