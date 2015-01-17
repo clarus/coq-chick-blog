@@ -18,7 +18,6 @@ Install the dependencies:
 
 Download the CSS:
 
-    mkdir -p extraction/static
     curl -L https://github.com/clarus/coq-red-css/releases/download/coq-blog.1.0.2/style.min.css >extraction/static/style.min.css
 
 Compile:
@@ -52,7 +51,7 @@ The purity of Coq ensures that each request is answered in finite time without e
 ### Scenarios
 A scenario is a set of runs of the server. A type-checking scenario shows that the server behaves as expected in a certain use case. For example, we check that when we create, edit and view a post we get the same result as what we entered. You can think of a scenario as an unit test with universally quantified variables.
 
-For example, here is a simple check of the execution of the index page:
+Here is a simple check of the execution of the index page:
 
     (** The index page when the list of posts is available. *)
     Definition index_ok (cookies : Request.Cookies.t) (post_headers : list Post.Header.t)
