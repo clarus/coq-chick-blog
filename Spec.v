@@ -40,40 +40,47 @@ End Run.
 Module SimpleScenarios.
   Import Run.
 
-  (** The index page when the list of posts is available. *)
-  Definition index_ok (cookies : Request.Cookies.t)
-    (post_headers : list Post.Header.t)
-    : Run.t (Main.server Request.Path.Index cookies) @@ Answer.Public
-      (Request.Cookies.is_logged @@ cookies)
-      (Answer.Public.Index post_headers).
-    (* We ask to list the available posts. *)
-    apply (Call (Command.ListPosts _ ) (Some post_headers)).
-    (* The program terminates. *)
-    apply Ret.
-  Defined.
+  Module Index.
+    (** The index page when the list of posts is available. *)
+    Definition ok (cookies : Request.Cookies.t)
+      (post_headers : list Post.Header.t)
+      : Run.t (Main.server Request.Path.Index cookies)
+        (Answer.Public
+          (Request.Cookies.is_logged cookies)
+          (* The answer will include the `post_headers`. *)
+          (Answer.Public.Index post_headers)).
+      (* The handler asks list of available posts. We return `post_headers`. *)
+      apply (Call (Command.ListPosts _ ) (Some post_headers)).
+      (* The handler terminates without other system calls. *)
+      apply Ret.
+    Defined.
 
-  (** The index page when the list of posts is not available. *)
-  Definition index_wrong (cookies : Request.Cookies.t)
-    : Run.t (Main.server Request.Path.Index cookies) @@ Answer.Public
-      (Request.Cookies.is_logged @@ cookies)
-      (Answer.Public.Index []).
-    (* We ask to list the available posts. *)
-    apply (Call (Command.ListPosts _ ) None).
-    (* We print an error message. *)
-    apply (Call (Command.Log _ ) tt).
-    (* The program terminates. *)
-    apply Ret.
-  Defined.
+    (** The index page when the list of posts is not available. *)
+    Definition wrong (cookies : Request.Cookies.t)
+      : Run.t (Main.server Request.Path.Index cookies)
+        (Answer.Public
+          (Request.Cookies.is_logged cookies)
+          (Answer.Public.Index [])).
+      (* The handler asks list of available posts. We return `None`. *)
+      apply (Call (Command.ListPosts _ ) None).
+      (* The handler prints an error message. *)
+      apply (Call (Command.Log _ ) tt).
+      (* The handler terminates without other system calls. *)
+      apply Ret.
+    Defined.
+  End Index.
 
-  (** It is not possible to add a post if not logged in. *)
-  Definition if_not_logged_add_is_forbidden (title : LString.t)
-    (date : Moment.Date.t)
-    : Run.t
-      (Main.server (Request.Path.PostDoAdd title date) Request.Cookies.LoggedOut)
-      Answer.Forbidden.
-    (* The program does no system calls. *)
-    apply Ret.
-  Defined.
+  Module PostDoAdd.
+    (** It is not possible to add a post if not logged in. *)
+    Definition if_not_logged_add_is_forbidden (title : LString.t)
+      (date : Moment.Date.t)
+      : Run.t
+        (Main.server (Request.Path.PostDoAdd title date) Request.Cookies.LoggedOut)
+        Answer.Forbidden.
+      (* The program does no system calls. *)
+      apply Ret.
+    Defined.
+  End PostDoAdd.
 End SimpleScenarios.
 
 (** Complex scenarios are scenarios over a list of successive requests. *)
