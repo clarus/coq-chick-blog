@@ -21,6 +21,13 @@ Module Run.
   | Call : forall (command : Command.t) (answer : Command.answer command)
     {handler : Command.answer command -> C.t A}, t (handler answer) ->
     t (C.Call command handler).
+
+  (** The final result of a run. *)
+  Fixpoint eval {A : Type} {x : C.t A} (run : t x) : A :=
+    match run with
+    | Ret x => x
+    | Call _ _ _ run => eval run
+    end.
 End Run.
 
 (** Scenarios are parametrized runs of computations. Type-checking scenarios
