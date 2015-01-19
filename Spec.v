@@ -172,42 +172,41 @@ Module ComplexScenarios.
 End ComplexScenarios.
 
 (** We check that only public pages are accessible without login. *)
-Module PrivateAnswers.
+Module PublicAnswers.
   (** Test if an answer has a private content. *)
-  Definition is_private (answer : Answer.t) : bool :=
+  Definition is_public (answer : Answer.t) : bool :=
     match answer with
-    | Answer.Private _ => true
-    | _ => false
+    | Answer.Private _ => false
+    | _ => true
     end.
+
+  (** If a computation has only public answers. *)
+  Inductive t : C.t Answer.t -> Prop :=
+  | Ret : forall {x : Answer.t}, is_public x = true -> t (C.Ret x)
+  | Call : forall (command : Command.t)
+    (handler : Command.answer command -> C.t Answer.t),
+    (forall (answer : Command.answer command), t (handler answer)) ->
+    t (C.Call command handler).
 
   (** We cannot access private pages without the logged-in cookie. We check that
       there is no runs with a logged out cookie to a private page. We reason by
       disjunction over the path. *)
   Lemma if_not_logged_no_private_pages (path : Request.Path.t)
-    (answer : Answer.t)
-    (run : Run.t (Main.server path Request.Cookies.LoggedOut) answer)
-    : is_private answer = false.
-    destruct path; try (inversion run; reflexivity);
-      unfold Main.server in run.
-    - unfold Main.Controller.static in run.
-      destruct (Run.inversion_call run) as [content run1].
-      destruct content; inversion run1; reflexivity.
-    - unfold Main.Controller.index in run.
-      destruct (Run.inversion_call run) as [post_headers run1].
-      destruct post_headers.
-      + inversion run1; reflexivity.
-      + destruct (Run.inversion_call run1) as [tt run2].
-        inversion run2; reflexivity.
-    - destruct (Run.inversion_call run) as [post_headers run1].
-      destruct post_headers as [post_headers |].
-      + simpl in run1.
-        destruct (find _ @@ _).
-        * destruct (Run.inversion_call run1) as [content run2].
-          inversion run2; reflexivity.
-        * inversion run1; reflexivity.
-      + inversion run1; reflexivity.
+    (answer : Answer.t) : t (Main.server path Request.Cookies.LoggedOut).
+    destruct path; try (apply Ret; reflexivity); unfold Main.server.
+    - unfold Main.Controller.static.
+      apply Call; intro content.
+      destruct content; now apply Ret.
+    - unfold Main.Controller.index.
+      apply Call; intro posts.
+      destruct posts; try now apply Ret.
+      apply Call; intro; now apply Ret.
+    - unfold Main.Controller.post_show.
+      apply Call; intro post; destruct post; try now apply Ret.
+      simpl; destruct (find _ @@ _); try now apply Ret.
+      apply Call; intro content; destruct content; now apply Ret.
   Qed.
-End PrivateAnswers.
+End PublicAnswers.
 
 (** We check that an unauthenticated user cannot modify the file system. *)
 Module ReadOnly.
