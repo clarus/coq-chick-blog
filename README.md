@@ -54,8 +54,7 @@ A scenario is a set of runs of the server. A type-checking scenario shows that t
 Here is a simple check of the execution of the index page:
 
     (** The index page when the list of posts is available. *)
-    Definition index_ok (cookies : Request.Cookies.t)
-      (post_headers : list Post.Header.t)
+    Definition index_ok (cookies : Request.Cookies.t) (post_headers : list Post.Header.t)
       : Run.t (Main.server Request.Path.Index cookies).
       (* The handler asks the list of available posts. We return `post_headers`. *)
       apply (Call (Command.ListPosts _ ) (Some post_headers)).
