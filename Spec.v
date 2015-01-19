@@ -16,22 +16,11 @@ Local Open Scope char.
     system calls. *)
 Module Run.
   (** We define a run by induction on the structure of a computation. *)
-  Inductive t {A : Type} : C.t A -> A -> Type :=
-  | Ret : forall (x : A), t (C.Ret x) x
+  Inductive t {A : Type} : C.t A -> Type :=
+  | Ret : forall (x : A), t (C.Ret x)
   | Call : forall (command : Command.t) (answer : Command.answer command)
-    {handler : Command.answer command -> C.t A} {x : A}, t (handler answer) x ->
-    t (C.Call command handler) x.
-
-  (** Extract the answer and the run of the handler from a run on a call. *)
-  Definition inversion_call : forall {A : Type} {command : Command.t}
-    {handler : Command.answer command -> C.t A} {x : A}
-    (run : t (C.Call command handler) x),
-    {answer : Command.answer command & t (handler answer) x}.
-    intros.
-    inversion_clear run.
-    exists answer.
-    exact X.
-  Defined.
+    {handler : Command.answer command -> C.t A}, t (handler answer) ->
+    t (C.Call command handler).
 End Run.
 
 (** Scenarios are parametrized runs of computations. Type-checking scenarios
@@ -44,29 +33,27 @@ Module SimpleScenarios.
     (** The index page when the list of posts is available. *)
     Definition ok (cookies : Request.Cookies.t)
       (post_headers : list Post.Header.t)
-      : Run.t (Main.server Request.Path.Index cookies)
-        (Answer.Public
-          (Request.Cookies.is_logged cookies)
-          (* The answer will include the `post_headers`. *)
-          (Answer.Public.Index post_headers)).
+      : Run.t (Main.server Request.Path.Index cookies).
       (* The handler asks the list of available posts. We return `post_headers`. *)
       apply (Call (Command.ListPosts _ ) (Some post_headers)).
       (* The handler terminates without other system calls. *)
-      apply Ret.
+      apply (Ret (Answer.Public
+        (Request.Cookies.is_logged cookies)
+        (* The answer will include the `post_headers`. *)
+        (Answer.Public.Index post_headers))).
     Defined.
 
     (** The index page when the list of posts is not available. *)
     Definition wrong (cookies : Request.Cookies.t)
-      : Run.t (Main.server Request.Path.Index cookies)
-        (Answer.Public
-          (Request.Cookies.is_logged cookies)
-          (Answer.Public.Index [])).
+      : Run.t (Main.server Request.Path.Index cookies).
       (* The handler asks the list of available posts. We return `None`. *)
       apply (Call (Command.ListPosts _ ) None).
       (* The handler prints an error message. *)
       apply (Call (Command.Log _ ) tt).
       (* The handler terminates without other system calls. *)
-      apply Ret.
+      apply (Ret (Answer.Public
+        (Request.Cookies.is_logged cookies)
+        (Answer.Public.Index []))).
     Defined.
   End Index.
 
@@ -74,11 +61,10 @@ Module SimpleScenarios.
     (** It is not possible to add a post if not logged in. *)
     Definition if_not_logged_add_is_forbidden (title : LString.t)
       (date : Moment.Date.t)
-      : Run.t
-        (Main.server (Request.Path.PostDoAdd title date) Request.Cookies.LoggedOut)
-        Answer.Forbidden.
+      : Run.t (Main.server (Request.Path.PostDoAdd title date)
+          Request.Cookies.LoggedOut).
       (* The program does no system calls. *)
-      apply Ret.
+      apply (Ret Answer.Forbidden).
     Defined.
   End PostDoAdd.
 End SimpleScenarios.
@@ -92,8 +78,7 @@ Module ComplexScenarios.
     Record t := New {
       path : Request.Path.t;
       cookies : Request.Cookies.t;
-      answer : Answer.t;
-      run : Run.t (Main.server path cookies) answer }.
+      run : Run.t (Main.server path cookies) }.
   End RequestRun.
 
   (** A list of successive runs of requests. *)
@@ -105,9 +90,9 @@ Module ComplexScenarios.
       in the file system being `post_header :: post_headers`, given a run of
       the continuation. *)
   Definition helpers_post_header {A : Type} {k : option Post.Header.t -> C.t A}
-    (post_header : Post.Header.t) (post_headers : list Post.Header.t) (x : A)
-    (run_k : Run.t (k (Some post_header)) x)
-    : Run.t (Main.Helpers.post_header (Post.Header.url post_header) k) x.
+    (post_header : Post.Header.t) (post_headers : list Post.Header.t)
+    (run_k : Run.t (k (Some post_header)))
+    : Run.t (Main.Helpers.post_header (Post.Header.url post_header) k).
     unfold Main.Helpers.post_header.
     apply (Call (Command.ListPosts _) (Some (post_header :: post_headers))).
     unfold apply; simpl.
@@ -120,9 +105,9 @@ Module ComplexScenarios.
       the continuation. *)
   Definition helpers_post {A : Type} {k : option Post.t -> C.t A}
     (post_header : Post.Header.t) (post_headers : list Post.Header.t)
-    (content : LString.t) (x : A)
-    (run_k : Run.t (k (Some (Post.New post_header content))) x)
-    : Run.t (Main.Helpers.post (Post.Header.url post_header) k) x.
+    (content : LString.t)
+    (run_k : Run.t (k (Some (Post.New post_header content))))
+    : Run.t (Main.Helpers.post (Post.Header.url post_header) k).
     apply (helpers_post_header post_header post_headers).
     apply (Call
       (Command.ReadFile (_ ++ Post.Header.file_name post_header))
@@ -143,29 +128,25 @@ Module ComplexScenarios.
     (* /do_add *)
     apply cons.
     apply (RequestRun.New
-      (Request.Path.PostDoAdd title date) Request.Cookies.LoggedIn
-      (Answer.Private (Answer.Private.PostDoAdd true))).
+      (Request.Path.PostDoAdd title date) Request.Cookies.LoggedIn).
     apply (Call
       (Command.UpdateFile (Main.posts_directory ++ file_name) (LString.s ""))
       true).
-    apply Ret.
+    apply (Ret (Answer.Private (Answer.Private.PostDoAdd true))).
     (* /posts/do_edit *)
     apply cons.
     apply (RequestRun.New
-      (Request.Path.PostDoEdit url content) Request.Cookies.LoggedIn
-      (Answer.Private (Answer.Private.PostDoEdit url true))).
+      (Request.Path.PostDoEdit url content) Request.Cookies.LoggedIn).
     apply (helpers_post_header post_header post_headers).
     apply (Call
       (Command.UpdateFile (Main.posts_directory ++ file_name) content)
       true).
-    apply Ret.
+    apply (Ret (Answer.Private (Answer.Private.PostDoEdit url true))).
     (* /posts/show *)
     apply cons.
-    apply (RequestRun.New
-      (Request.Path.PostShow url) Request.Cookies.LoggedIn
-      (Answer.Public true (Answer.Public.PostShow url (Some post)))).
+    apply (RequestRun.New (Request.Path.PostShow url) Request.Cookies.LoggedIn).
     apply (helpers_post post_header post_headers content).
-    apply Ret.
+    apply (Ret (Answer.Public true (Answer.Public.PostShow url (Some post)))).
     (* end *)
     apply nil.
   Defined.
