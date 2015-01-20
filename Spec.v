@@ -28,6 +28,14 @@ Module Run.
     | Ret x => x
     | Call _ _ _ run => eval run
     end.
+
+  (** The trace of a run. *)
+  Fixpoint trace {A : Type} {x : C.t A} (run : t x)
+    : list {command : Command.t & Command.answer command} :=
+    match run with
+    | Ret _ => []
+    | Call command answer _ run => existT _ command answer :: trace run
+    end.
 End Run.
 
 (** Scenarios are parametrized runs of computations. Type-checking scenarios
