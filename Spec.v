@@ -180,7 +180,7 @@ Module PublicAnswers.
       there is no runs with a logged out cookie to a private page. We reason by
       disjunction over the path. *)
   Lemma if_not_logged_no_private_pages (path : Request.Path.t)
-    (answer : Answer.t) : t (Main.server path Request.Cookies.LoggedOut).
+    : t (Main.server path Request.Cookies.LoggedOut).
     destruct path; try (apply Ret; reflexivity); unfold Main.server.
     - unfold Main.Controller.static.
       apply Call; intro content.
