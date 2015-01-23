@@ -33,7 +33,7 @@ Run on [localhost:8008](http://localhost:8008/):
 ## Specification
 The blog is defined in `Main.v` as the function:
 
-    Definition server (path : Request.Path.t) (cookies : Request.Cookies.t) : C.t Answer.t.
+    Definition server (path : Path.t) (cookies : Cookies.t) : C.t Response.t.
 
 It handles an HTTP request and generate an answer using system calls to the file system. The type `C.t A` represents a computation doing I/O operations:
 
@@ -46,7 +46,7 @@ A computation can either:
 * return a pure value of type `A`
 * call an external command and wait for its result
 
-The purity of Coq ensures that each request is answered in finite time without exceptions. We specify the behavior of the server in `Spec.v`.
+The purity of Coq ensures that each request is answered exactly once in finite time. We specify the behavior of the server in `Spec.v`.
 
 ### Scenarios
 A scenario is a set of runs of the server. A type-checking scenario shows that the server behaves as expected in a certain use case. For example, we check that when we create, edit and view a post we get the same result as what we entered. You can think of a scenario as an unit test with universally quantified variables.
@@ -59,13 +59,13 @@ Here is a simple check of the execution of the index page:
       (* The handler asks the list of available posts. We return `post_headers`. *)
       apply (Call (Command.ListPosts _ ) (Some post_headers)).
       (* The handler terminates without other system calls. *)
-      apply (Ret (Answer.Public
+      apply (Ret (Response.Public
         (Request.Cookies.is_logged cookies)
-        (* The answer will include the `post_headers`. *)
-        (Answer.Public.Index post_headers))).
+        (* The response will include the `post_headers`. *)
+        (Response.Public.Index post_headers))).
     Defined.
 
-Given any `cookies` and `post_headers`, we execute the server handler on the page `Request.Path.Index`. The handler does exactly one system call, to which we answer `Some post_headers`, playing the role of the system. The final answer of the server is then `Answer.Public.Index post_headers`. Note that we do not need to execute `index_ok` on every instances of `cookies` and `post_headers`: since the type-system of Coq is supposed sound, it is enough to type-check `index_ok`.
+Given any `cookies` and `post_headers`, we execute the server handler on the page `Request.Path.Index`. The handler does exactly one system call, to which we answer `Some post_headers`, playing the role of the system. The final response of the server is then `Response.Public.Index post_headers`. Note that we do not need to execute `index_ok` on every instances of `cookies` and `post_headers`: since the type-system of Coq is supposed sound, it is enough to type-check `index_ok`.
 
 ### Privacy
 We check that, for any runs of a program, an unauthenticated user cannot access private pages (like edit) or modify the file system with system calls.
