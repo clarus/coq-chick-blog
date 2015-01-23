@@ -6,11 +6,11 @@ Require Import ErrorHandlers.All.
 Require Import FunctionNinjas.All.
 Require Import ListString.All.
 Require Import Moment.All.
-Require Answer.
 Require Import Computation.
 Require Http.
 Require Import Model.
 Require Request.
+Require Response.
 
 Import ListNotations.
 Import C.Notations.
@@ -61,81 +61,81 @@ End Helpers.
 (** The controller. *)
 Module Controller.
   (** Page not found. *)
-  Definition not_found : C.t Answer.t :=
-    C.Ret Answer.NotFound.
+  Definition not_found : C.t Response.t :=
+    C.Ret Response.NotFound.
 
   (** The arguments of the page cannot be parsed. *)
-  Definition wrong_arguments : C.t Answer.t :=
-    C.Ret Answer.WrongArguments.
+  Definition wrong_arguments : C.t Response.t :=
+    C.Ret Response.WrongArguments.
 
   (** The page cannot be accessed without login. *)
-  Definition forbidden : C.t Answer.t :=
-    C.Ret Answer.Forbidden.
+  Definition forbidden : C.t Response.t :=
+    C.Ret Response.Forbidden.
 
   (** A static file in the `static/` folder. *)
-  Definition static (path : list LString.t) : C.t Answer.t :=
+  Definition static (path : list LString.t) : C.t Response.t :=
     let mime_type := Helpers.mime_type @@ List.last path (LString.s "") in
     let file_name := LString.s "static/" ++ LString.join (LString.s "/") path in
     call! content := Command.ReadFile file_name in
     match content with
     | None => not_found
-    | Some content => C.Ret @@ Answer.Static mime_type content
+    | Some content => C.Ret @@ Response.Static mime_type content
     end.
 
   (** The index page. *)
-  Definition index (is_logged : bool) : C.t Answer.t :=
+  Definition index (is_logged : bool) : C.t Response.t :=
     call! posts := Command.ListPosts posts_directory in
     match posts with
     | None =>
       do_call! Command.Log (LString.s "Cannot open the " ++ posts_directory ++
         LString.s " directory.") in
-      C.Ret @@ Answer.Public is_logged @@ Answer.Public.Index []
-    | Some posts => C.Ret @@ Answer.Public is_logged @@
-      Answer.Public.Index posts
+      C.Ret @@ Response.Public is_logged @@ Response.Public.Index []
+    | Some posts => C.Ret @@ Response.Public is_logged @@
+      Response.Public.Index posts
     end.
 
   (** Confirmation that the user is logged in. *)
-  Definition login : C.t Answer.t :=
-    C.Ret Answer.Login.
+  Definition login : C.t Response.t :=
+    C.Ret Response.Login.
 
   (** Confirmation that the user is logged out. *)
-  Definition logout : C.t Answer.t :=
-    C.Ret Answer.Logout.
+  Definition logout : C.t Response.t :=
+    C.Ret Response.Logout.
 
   (** Show the content of a post. *)
-  Definition post_show (is_logged : bool) (post_url : LString.t) : C.t Answer.t :=
+  Definition post_show (is_logged : bool) (post_url : LString.t) : C.t Response.t :=
     let! post := Helpers.post post_url in
-    C.Ret @@ Answer.Public is_logged @@ Answer.Public.PostShow post_url post.
+    C.Ret @@ Response.Public is_logged @@ Response.Public.PostShow post_url post.
 
   (** Show the the form to add a post. *)
-  Definition post_add (is_logged : bool) : C.t Answer.t :=
+  Definition post_add (is_logged : bool) : C.t Response.t :=
     if negb is_logged then
       forbidden
     else
-      C.Ret @@ Answer.Private Answer.Private.PostAdd.
+      C.Ret @@ Response.Private Response.Private.PostAdd.
 
   (** Add a post and show a confirmation. *)
   Definition post_do_add (is_logged : bool) (title : LString.t)
-    (date : Moment.Date.t) : C.t Answer.t :=
+    (date : Moment.Date.t) : C.t Response.t :=
     if negb is_logged then
       forbidden
     else
       let file_name := LString.s "posts/" ++ Moment.Date.Print.date date ++
         LString.s " " ++ title ++ LString.s ".html" in
       call! is_success := Command.UpdateFile file_name (LString.s "") in
-      C.Ret @@ Answer.Private @@ Answer.Private.PostDoAdd is_success.
+      C.Ret @@ Response.Private @@ Response.Private.PostDoAdd is_success.
 
   (** Show the form to edit a post. *)
-  Definition post_edit (is_logged : bool) (post_url : LString.t) : C.t Answer.t :=
+  Definition post_edit (is_logged : bool) (post_url : LString.t) : C.t Response.t :=
     if negb is_logged then
       forbidden
     else
       let! post := Helpers.post post_url in
-      C.Ret @@ Answer.Private @@ Answer.Private.PostEdit post_url post.
+      C.Ret @@ Response.Private @@ Response.Private.PostEdit post_url post.
 
   (** Edit a post and show a confirmation. *)
   Definition post_do_edit (is_logged : bool) (post_url : LString.t)
-    (content : LString.t) : C.t Answer.t :=
+    (content : LString.t) : C.t Response.t :=
     if negb is_logged then
       forbidden
     else
@@ -148,11 +148,11 @@ Module Controller.
           call! is_success : bool := Command.UpdateFile file_name content in
           k is_success
         end in
-      C.Ret @@ Answer.Private @@ Answer.Private.PostDoEdit post_url is_success.
+      C.Ret @@ Response.Private @@ Response.Private.PostDoEdit post_url is_success.
 
   (** Delete a post and show a confirmation. *)
   Definition post_do_delete (is_logged : bool) (post_url : LString.t)
-    : C.t Answer.t :=
+    : C.t Response.t :=
     if negb is_logged then
       forbidden
     else
@@ -165,12 +165,12 @@ Module Controller.
           call! is_success : bool := Command.DeleteFile file_name in
           k is_success
         end in
-      C.Ret @@ Answer.Private @@ Answer.Private.PostDoDelete is_success.
+      C.Ret @@ Response.Private @@ Response.Private.PostDoDelete is_success.
 End Controller.
 
 (** The main function, the server handler. *)
 Definition server (path : Request.Path.t) (cookies : Request.Cookies.t)
-  : C.t Answer.t :=
+  : C.t Response.t :=
   let is_logged := Request.Cookies.is_logged cookies in
   match path with
   | Request.Path.NotFound => Controller.not_found

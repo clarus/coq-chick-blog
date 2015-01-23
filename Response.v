@@ -1,4 +1,4 @@
-(** Answers from the server. *)
+(** Responses from the server. *)
 Require Import ListString.All.
 Require Http.
 Require Import Model.
@@ -25,7 +25,7 @@ Module Private.
   | PostDoDelete (is_success : bool).
 End Private.
 
-(** Sum type of the answers. *)
+(** Sum type of the responses. *)
 Inductive t :=
 (** Errors. *)
 | NotFound | WrongArguments | Forbidden
@@ -38,7 +38,7 @@ Inductive t :=
 (** Private pages. *)
 | Private (page : Private.t).
 
-(** Raw answers after pretty-printing in `Render.v`. The return code is always
+(** Raw responses after pretty-printing in `Render.v`. The return code is always
     200 (OK). *)
 Module Raw.
   Record t := New {

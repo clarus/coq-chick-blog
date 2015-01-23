@@ -1,11 +1,11 @@
-(** Pretty-print answers to HTML. *)
+(** Pretty-print responses to HTML. *)
 Require Import Coq.Lists.List.
 Require Import Coq.Strings.Ascii.
 Require Import FunctionNinjas.All.
 Require Import ListString.All.
-Require Answer.
 Require Http.
 Require Import Model.
+Require Response.
 
 Import ListNotations.
 Local Open Scope char.
@@ -73,17 +73,17 @@ Definition footer : LString.t :=
 ".
 
 (** The MIME type of a page. *)
-Definition mime_type (answer : Answer.t) : LString.t :=
-  match answer with
-  | Answer.Static mime_type _ => mime_type
+Definition mime_type (response : Response.t) : LString.t :=
+  match response with
+  | Response.Static mime_type _ => mime_type
   | _ => LString.s "text/html; charset=utf-8"
   end.
 
 (** Pretty-print the cookies. *)
-Definition cookies (answer : Answer.t) : Http.Cookies.t :=
-  match answer with
-  | Answer.Login => [(LString.s "is_logged", LString.s "true")]
-  | Answer.Logout => [(LString.s "is_logged", LString.s "false")]
+Definition cookies (response : Response.t) : Http.Cookies.t :=
+  match response with
+  | Response.Login => [(LString.s "is_logged", LString.s "true")]
+  | Response.Logout => [(LString.s "is_logged", LString.s "false")]
   | _ => []
   end.
 
@@ -257,37 +257,37 @@ End Content.
 Definition pack (is_logged : option bool) (content : LString.t) : LString.t :=
   header is_logged ++ content ++ footer.
 
-(** Pretty-print an answer to HTML. *)
-Definition content (answer : Answer.t) : LString.t :=
-  match answer with
-  | Answer.NotFound => LString.s "Not found."
-  | Answer.WrongArguments => LString.s "Wrong arguments."
-  | Answer.Forbidden => LString.s "Forbidden."
-  | Answer.Static _ content => content
-  | Answer.Login => pack None Content.login
-  | Answer.Logout => pack None Content.logout
-  | Answer.Public is_logged page =>
+(** Pretty-print a response to HTML. *)
+Definition content (response : Response.t) : LString.t :=
+  match response with
+  | Response.NotFound => LString.s "Not found."
+  | Response.WrongArguments => LString.s "Wrong arguments."
+  | Response.Forbidden => LString.s "Forbidden."
+  | Response.Static _ content => content
+  | Response.Login => pack None Content.login
+  | Response.Logout => pack None Content.logout
+  | Response.Public is_logged page =>
     match page with
-    | Answer.Public.Index posts =>
+    | Response.Public.Index posts =>
       pack (Some is_logged) @@ Content.index is_logged posts
-    | Answer.Public.PostShow url post =>
+    | Response.Public.PostShow url post =>
       pack (Some is_logged) @@ Content.post_show is_logged url post
     end
-  | Answer.Private page =>
+  | Response.Private page =>
     match page with
-    | Answer.Private.PostAdd =>
+    | Response.Private.PostAdd =>
       pack (Some true) @@ Content.post_add
-    | Answer.Private.PostDoAdd is_success =>
+    | Response.Private.PostDoAdd is_success =>
       pack (Some true) @@ Content.post_do_add is_success
-    | Answer.Private.PostEdit url post =>
+    | Response.Private.PostEdit url post =>
       pack (Some true) @@ Content.post_edit url post
-    | Answer.Private.PostDoEdit url is_success =>
+    | Response.Private.PostDoEdit url is_success =>
       pack (Some true) @@ Content.post_do_edit url is_success
-    | Answer.Private.PostDoDelete is_success =>
+    | Response.Private.PostDoDelete is_success =>
       pack (Some true) @@ Content.post_do_delete is_success
     end
   end.
 
-(** A raw answer if the MIME type, the cookies and the pretty-printed body. *)
-Definition raw (answer : Answer.t) : Answer.Raw.t :=
-  Answer.Raw.New (mime_type answer) (cookies answer) (content answer).
+(** A raw response is the MIME type, the cookies and the pretty-printed body. *)
+Definition raw (response : Response.t) : Response.Raw.t :=
+  Response.Raw.New (mime_type response) (cookies response) (content response).

@@ -11,6 +11,7 @@ Require Import Computation.
 Require Import Model.
 Require Render.
 Require Request.
+Require Response.
 
 Import ListNotations.
 Local Open Scope type.
@@ -138,30 +139,30 @@ Module RawRequest.
     end.
 End RawRequest.
 
-(** Answers as given to CoHTTP using OCaml strings. *)
-Module RawAnswer.
-  (** An answer a MIME type, some cookies and a body. *)
+(** Responses as given to CoHTTP using OCaml strings. *)
+Module RawResponse.
+  (** An response a MIME type, some cookies and a body. *)
   Definition t := String.t * list (String.t * String.t) * String.t.
 
   (** Export a raw request exporting OCaml strings. *)
-  Definition export (answer : Answer.Raw.t) : t :=
-    let mime_type := String.of_lstring @@ Answer.Raw.mime_type answer in
-    let cookies := Answer.Raw.cookies answer |> List.map (fun (cookie : _ * _) =>
+  Definition export (response : Response.Raw.t) : t :=
+    let mime_type := String.of_lstring @@ Response.Raw.mime_type response in
+    let cookies := Response.Raw.cookies response |> List.map (fun (cookie : _ * _) =>
       let (k, v) := cookie in
       (String.of_lstring k, String.of_lstring v)) in
-    let content := String.of_lstring @@ Answer.Raw.content answer in
+    let content := String.of_lstring @@ Response.Raw.content response in
     (mime_type, cookies, content).
-End RawAnswer.
+End RawResponse.
 
 (** The infinite loop around the server handler. *)
-Parameter main_loop : (RawRequest.t -> Lwt.t RawAnswer.t) -> unit.
+Parameter main_loop : (RawRequest.t -> Lwt.t RawResponse.t) -> unit.
 Extract Constant main_loop => "fun handler ->
   Lwt_main.run (Utils.start_server handler 8008)".
 
 (** The function to extract to OCaml, parametrized by the server handler. *)
-Definition main (handler : Request.Path.t -> Request.Cookies.t-> C.t Answer.t)
+Definition main (handler : Request.Path.t -> Request.Cookies.t-> C.t Response.t)
   : unit :=
   main_loop (fun request =>
     let (path, cookies) := Request.parse @@ RawRequest.import request in
-    Lwt.bind (eval @@ handler path cookies) (fun answer =>
-    Lwt.ret @@ RawAnswer.export @@ Render.raw answer)).
+    Lwt.bind (eval @@ handler path cookies) (fun response =>
+    Lwt.ret @@ RawResponse.export @@ Render.raw response)).

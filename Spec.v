@@ -52,10 +52,10 @@ Module SimpleScenarios.
       (* The handler asks the list of available posts. We return `post_headers`. *)
       apply (Call (Command.ListPosts _ ) (Some post_headers)).
       (* The handler terminates without other system calls. *)
-      apply (Ret (Answer.Public
+      apply (Ret (Response.Public
         (Request.Cookies.is_logged cookies)
-        (* The answer will include the `post_headers`. *)
-        (Answer.Public.Index post_headers))).
+        (* The response will include the `post_headers`. *)
+        (Response.Public.Index post_headers))).
     Defined.
 
     (** The index page when the list of posts is not available. *)
@@ -66,9 +66,9 @@ Module SimpleScenarios.
       (* The handler prints an error message. *)
       apply (Call (Command.Log _ ) tt).
       (* The handler terminates without other system calls. *)
-      apply (Ret (Answer.Public
+      apply (Ret (Response.Public
         (Request.Cookies.is_logged cookies)
-        (Answer.Public.Index []))).
+        (Response.Public.Index []))).
     Defined.
   End Index.
 
@@ -79,7 +79,7 @@ Module SimpleScenarios.
       : Run.t (Main.server (Request.Path.PostDoAdd title date)
           Request.Cookies.LoggedOut).
       (* The program does no system calls. *)
-      apply (Ret Answer.Forbidden).
+      apply (Ret Response.Forbidden).
     Defined.
   End PostDoAdd.
 End SimpleScenarios.
@@ -147,7 +147,7 @@ Module ComplexScenarios.
     apply (Call
       (Command.UpdateFile (Main.posts_directory ++ file_name) (LString.s ""))
       true).
-    apply (Ret (Answer.Private (Answer.Private.PostDoAdd true))).
+    apply (Ret (Response.Private (Response.Private.PostDoAdd true))).
     (* /posts/do_edit *)
     apply cons.
     apply (RequestRun.New
@@ -156,31 +156,31 @@ Module ComplexScenarios.
     apply (Call
       (Command.UpdateFile (Main.posts_directory ++ file_name) content)
       true).
-    apply (Ret (Answer.Private (Answer.Private.PostDoEdit url true))).
+    apply (Ret (Response.Private (Response.Private.PostDoEdit url true))).
     (* /posts/show *)
     apply cons.
     apply (RequestRun.New (Request.Path.PostShow url) Request.Cookies.LoggedIn).
     apply (helpers_post post_header post_headers content).
-    apply (Ret (Answer.Public true (Answer.Public.PostShow url (Some post)))).
+    apply (Ret (Response.Public true (Response.Public.PostShow url (Some post)))).
     (* end *)
     apply nil.
   Defined.
 End ComplexScenarios.
 
 (** We check that only public pages are accessible without login. *)
-Module PublicAnswers.
-  (** Test if an answer has a private content. *)
-  Definition is_public (answer : Answer.t) : bool :=
+Module PublicResponses.
+  (** Test if a response has a private content. *)
+  Definition is_public (answer : Response.t) : bool :=
     match answer with
-    | Answer.Private _ => false
+    | Response.Private _ => false
     | _ => true
     end.
 
-  (** If a computation has only public answers. *)
-  Inductive t : C.t Answer.t -> Prop :=
-  | Ret : forall {x : Answer.t}, is_public x = true -> t (C.Ret x)
+  (** If a computation has only public reponses. *)
+  Inductive t : C.t Response.t -> Prop :=
+  | Ret : forall {x : Response.t}, is_public x = true -> t (C.Ret x)
   | Call : forall (command : Command.t)
-    (handler : Command.answer command -> C.t Answer.t),
+    (handler : Command.answer command -> C.t Response.t),
     (forall (answer : Command.answer command), t (handler answer)) ->
     t (C.Call command handler).
 
@@ -202,7 +202,7 @@ Module PublicAnswers.
       simpl; destruct (find _ @@ _); try now apply Ret.
       apply Call; intro content; destruct content; now apply Ret.
   Qed.
-End PublicAnswers.
+End PublicResponses.
 
 (** We check that an unauthenticated user cannot modify the file system. *)
 Module ReadOnly.
