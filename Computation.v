@@ -42,6 +42,10 @@ Module C.
 
   (** Some optional notations. *)
   Module Notations.
+    (** A nicer notation for `Ret`. *)
+    Definition ret {A : Type} (x : A) : t A :=
+      Ret x.
+
     (** We define an explicit apply function so that Coq does not try to expand
         the notations everywhere. *)
     Definition apply {A B} (f : A -> B) (x : A) := f x.

@@ -62,15 +62,15 @@ End Helpers.
 Module Controller.
   (** Page not found. *)
   Definition not_found : C.t Response.t :=
-    C.Ret Response.NotFound.
+    ret Response.NotFound.
 
   (** The arguments of the page cannot be parsed. *)
   Definition wrong_arguments : C.t Response.t :=
-    C.Ret Response.WrongArguments.
+    ret Response.WrongArguments.
 
   (** The page cannot be accessed without login. *)
   Definition forbidden : C.t Response.t :=
-    C.Ret Response.Forbidden.
+    ret Response.Forbidden.
 
   (** A static file in the `static/` folder. *)
   Definition static (path : list LString.t) : C.t Response.t :=
@@ -79,7 +79,7 @@ Module Controller.
     call! content := Command.ReadFile file_name in
     match content with
     | None => not_found
-    | Some content => C.Ret @@ Response.Static mime_type content
+    | Some content => ret @@ Response.Static mime_type content
     end.
 
   (** The index page. *)
@@ -89,32 +89,32 @@ Module Controller.
     | None =>
       do_call! Command.Log (LString.s "Cannot open the " ++ posts_directory ++
         LString.s " directory.") in
-      C.Ret @@ Response.Index is_logged []
-    | Some posts => C.Ret @@ Response.Index is_logged posts
+      ret @@ Response.Index is_logged []
+    | Some posts => ret @@ Response.Index is_logged posts
     end.
 
   (** Confirmation that the user is logged in. *)
   Definition login (is_logged : bool) : C.t Response.t :=
     if is_logged then
-      C.Ret Response.Login
+      ret Response.Login
     else
       forbidden.
 
   (** Confirmation that the user is logged out. *)
   Definition logout : C.t Response.t :=
-    C.Ret Response.Logout.
+    ret Response.Logout.
 
   (** Show the content of a post. *)
   Definition post_show (is_logged : bool) (post_url : LString.t) : C.t Response.t :=
     let! post := Helpers.post post_url in
-    C.Ret @@ Response.PostShow is_logged post_url post.
+    ret @@ Response.PostShow is_logged post_url post.
 
-  (** Show the the form to add a post. *)
+  (** Show the form to add a post. *)
   Definition post_add (is_logged : bool) : C.t Response.t :=
     if negb is_logged then
       forbidden
     else
-      C.Ret @@ Response.PostAdd.
+      ret Response.PostAdd.
 
   (** Add a post and show a confirmation. *)
   Definition post_do_add (is_logged : bool) (title : LString.t)
@@ -125,7 +125,7 @@ Module Controller.
       let file_name := LString.s "posts/" ++ Moment.Date.Print.date date ++
         LString.s " " ++ title ++ LString.s ".html" in
       call! is_success := Command.UpdateFile file_name (LString.s "") in
-      C.Ret @@ Response.PostDoAdd is_success.
+      ret @@ Response.PostDoAdd is_success.
 
   (** Show the form to edit a post. *)
   Definition post_edit (is_logged : bool) (post_url : LString.t) : C.t Response.t :=
@@ -133,7 +133,7 @@ Module Controller.
       forbidden
     else
       let! post := Helpers.post post_url in
-      C.Ret @@ Response.PostEdit post_url post.
+      ret @@ Response.PostEdit post_url post.
 
   (** Edit a post and show a confirmation. *)
   Definition post_do_edit (is_logged : bool) (post_url : LString.t)
@@ -150,7 +150,7 @@ Module Controller.
           call! is_success : bool := Command.UpdateFile file_name content in
           k is_success
         end in
-      C.Ret @@ Response.PostDoEdit post_url is_success.
+      ret @@ Response.PostDoEdit post_url is_success.
 
   (** Delete a post and show a confirmation. *)
   Definition post_do_delete (is_logged : bool) (post_url : LString.t)
@@ -167,7 +167,7 @@ Module Controller.
           call! is_success : bool := Command.DeleteFile file_name in
           k is_success
         end in
-      C.Ret @@ Response.PostDoDelete is_success.
+      ret @@ Response.PostDoDelete is_success.
 End Controller.
 
 (** The main function, the server handler. *)
