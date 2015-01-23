@@ -3,28 +3,6 @@ Require Import ListString.All.
 Require Http.
 Require Import Model.
 
-(** Public pages (do not require to login). *)
-Module Public.
-  Inductive t :=
-  | Index (posts : list Post.Header.t)
-  | PostShow (url : LString.t) (post : option Post.t).
-End Public.
-
-(** Private pages (require to login). *)
-Module Private.
-  Inductive t :=
-  (** Form to add a post. *)
-  | PostAdd
-  (** Confirm that a post is added. *)
-  | PostDoAdd (is_success : bool)
-  (** Form to edit a post. *)
-  | PostEdit (url : LString.t) (post : option Post.t)
-  (** Confirm that a post is edited. *)
-  | PostDoEdit (url : LString.t) (is_success : bool)
-  (** Confirm that a post is deleted. *)
-  | PostDoDelete (is_success : bool).
-End Private.
-
 (** Sum type of the responses. *)
 Inductive t :=
 (** Errors. *)
@@ -33,10 +11,20 @@ Inductive t :=
 | Static (mime_type : LString.t) (content : LString.t)
 (** Confirm that you are logged in or out. *)
 | Login | Logout
-(** Public pages. *)
-| Public (is_logged : bool) (page : Public.t)
-(** Private pages. *)
-| Private (page : Private.t).
+(** The index page. *)
+| Index (is_logged : bool) (posts : list Post.Header.t)
+(** The page of a post. *)
+| PostShow (is_logged : bool) (url : LString.t) (post : option Post.t)
+(** Form to add a post. *)
+| PostAdd
+(** Confirm that a post is added. *)
+| PostDoAdd (is_success : bool)
+(** Form to edit a post. *)
+| PostEdit (url : LString.t) (post : option Post.t)
+(** Confirm that a post is edited. *)
+| PostDoEdit (url : LString.t) (is_success : bool)
+(** Confirm that a post is deleted. *)
+| PostDoDelete (is_success : bool).
 
 (** Raw responses after pretty-printing in `Render.v`. The return code is always
     200 (OK). *)

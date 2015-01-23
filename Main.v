@@ -89,14 +89,16 @@ Module Controller.
     | None =>
       do_call! Command.Log (LString.s "Cannot open the " ++ posts_directory ++
         LString.s " directory.") in
-      C.Ret @@ Response.Public is_logged @@ Response.Public.Index []
-    | Some posts => C.Ret @@ Response.Public is_logged @@
-      Response.Public.Index posts
+      C.Ret @@ Response.Index is_logged []
+    | Some posts => C.Ret @@ Response.Index is_logged posts
     end.
 
   (** Confirmation that the user is logged in. *)
-  Definition login : C.t Response.t :=
-    C.Ret Response.Login.
+  Definition login (is_logged : bool) : C.t Response.t :=
+    if is_logged then
+      C.Ret Response.Login
+    else
+      forbidden.
 
   (** Confirmation that the user is logged out. *)
   Definition logout : C.t Response.t :=
@@ -105,14 +107,14 @@ Module Controller.
   (** Show the content of a post. *)
   Definition post_show (is_logged : bool) (post_url : LString.t) : C.t Response.t :=
     let! post := Helpers.post post_url in
-    C.Ret @@ Response.Public is_logged @@ Response.Public.PostShow post_url post.
+    C.Ret @@ Response.PostShow is_logged post_url post.
 
   (** Show the the form to add a post. *)
   Definition post_add (is_logged : bool) : C.t Response.t :=
     if negb is_logged then
       forbidden
     else
-      C.Ret @@ Response.Private Response.Private.PostAdd.
+      C.Ret @@ Response.PostAdd.
 
   (** Add a post and show a confirmation. *)
   Definition post_do_add (is_logged : bool) (title : LString.t)
@@ -123,7 +125,7 @@ Module Controller.
       let file_name := LString.s "posts/" ++ Moment.Date.Print.date date ++
         LString.s " " ++ title ++ LString.s ".html" in
       call! is_success := Command.UpdateFile file_name (LString.s "") in
-      C.Ret @@ Response.Private @@ Response.Private.PostDoAdd is_success.
+      C.Ret @@ Response.PostDoAdd is_success.
 
   (** Show the form to edit a post. *)
   Definition post_edit (is_logged : bool) (post_url : LString.t) : C.t Response.t :=
@@ -131,7 +133,7 @@ Module Controller.
       forbidden
     else
       let! post := Helpers.post post_url in
-      C.Ret @@ Response.Private @@ Response.Private.PostEdit post_url post.
+      C.Ret @@ Response.PostEdit post_url post.
 
   (** Edit a post and show a confirmation. *)
   Definition post_do_edit (is_logged : bool) (post_url : LString.t)
@@ -148,7 +150,7 @@ Module Controller.
           call! is_success : bool := Command.UpdateFile file_name content in
           k is_success
         end in
-      C.Ret @@ Response.Private @@ Response.Private.PostDoEdit post_url is_success.
+      C.Ret @@ Response.PostDoEdit post_url is_success.
 
   (** Delete a post and show a confirmation. *)
   Definition post_do_delete (is_logged : bool) (post_url : LString.t)
@@ -165,7 +167,7 @@ Module Controller.
           call! is_success : bool := Command.DeleteFile file_name in
           k is_success
         end in
-      C.Ret @@ Response.Private @@ Response.Private.PostDoDelete is_success.
+      C.Ret @@ Response.PostDoDelete is_success.
 End Controller.
 
 (** The main function, the server handler. *)
@@ -177,7 +179,7 @@ Definition server (path : Request.Path.t) (cookies : Request.Cookies.t)
   | Request.Path.WrongArguments => Controller.wrong_arguments
   | Request.Path.Static path => Controller.static path
   | Request.Path.Index => Controller.index is_logged
-  | Request.Path.Login => Controller.login
+  | Request.Path.Login => Controller.login is_logged
   | Request.Path.Logout => Controller.logout
   | Request.Path.PostAdd => Controller.post_add is_logged
   | Request.Path.PostDoAdd title date =>

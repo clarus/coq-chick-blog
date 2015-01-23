@@ -52,10 +52,8 @@ Module SimpleScenarios.
       (* The handler asks the list of available posts. We return `post_headers`. *)
       apply (Call (Command.ListPosts _ ) (Some post_headers)).
       (* The handler terminates without other system calls. *)
-      apply (Ret (Response.Public
-        (Request.Cookies.is_logged cookies)
-        (* The response will include the `post_headers`. *)
-        (Response.Public.Index post_headers))).
+      apply (Ret (Response.Index (Request.Cookies.is_logged cookies)
+        post_headers)).
     Defined.
 
     (** The index page when the list of posts is not available. *)
@@ -66,9 +64,7 @@ Module SimpleScenarios.
       (* The handler prints an error message. *)
       apply (Call (Command.Log _ ) tt).
       (* The handler terminates without other system calls. *)
-      apply (Ret (Response.Public
-        (Request.Cookies.is_logged cookies)
-        (Response.Public.Index []))).
+      apply (Ret (Response.Index (Request.Cookies.is_logged cookies) [])).
     Defined.
   End Index.
 
@@ -147,7 +143,7 @@ Module ComplexScenarios.
     apply (Call
       (Command.UpdateFile (Main.posts_directory ++ file_name) (LString.s ""))
       true).
-    apply (Ret (Response.Private (Response.Private.PostDoAdd true))).
+    apply (Ret (Response.PostDoAdd true)).
     (* /posts/do_edit *)
     apply cons.
     apply (RequestRun.New
@@ -156,12 +152,12 @@ Module ComplexScenarios.
     apply (Call
       (Command.UpdateFile (Main.posts_directory ++ file_name) content)
       true).
-    apply (Ret (Response.Private (Response.Private.PostDoEdit url true))).
+    apply (Ret (Response.PostDoEdit url true)).
     (* /posts/show *)
     apply cons.
     apply (RequestRun.New (Request.Path.PostShow url) Request.Cookies.LoggedIn).
     apply (helpers_post post_header post_headers content).
-    apply (Ret (Response.Public true (Response.Public.PostShow url (Some post)))).
+    apply (Ret (Response.PostShow true url (Some post))).
     (* end *)
     apply nil.
   Defined.
@@ -169,11 +165,13 @@ End ComplexScenarios.
 
 (** We check that only public pages are accessible without login. *)
 Module PublicResponses.
-  (** Test if a response has a private content. *)
+  (** Test if a response is public. *)
   Definition is_public (answer : Response.t) : bool :=
     match answer with
-    | Response.Private _ => false
-    | _ => true
+    | Response.NotFound | Response.WrongArguments | Response.Forbidden
+      | Response.Static _ _ | Response.Logout | Response.Index _ _
+      | Response.PostShow _ _ _ => true
+    | _ => false
     end.
 
   (** If a computation has only public reponses. *)

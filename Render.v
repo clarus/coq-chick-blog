@@ -266,26 +266,18 @@ Definition content (response : Response.t) : LString.t :=
   | Response.Static _ content => content
   | Response.Login => pack None Content.login
   | Response.Logout => pack None Content.logout
-  | Response.Public is_logged page =>
-    match page with
-    | Response.Public.Index posts =>
-      pack (Some is_logged) @@ Content.index is_logged posts
-    | Response.Public.PostShow url post =>
-      pack (Some is_logged) @@ Content.post_show is_logged url post
-    end
-  | Response.Private page =>
-    match page with
-    | Response.Private.PostAdd =>
-      pack (Some true) @@ Content.post_add
-    | Response.Private.PostDoAdd is_success =>
-      pack (Some true) @@ Content.post_do_add is_success
-    | Response.Private.PostEdit url post =>
-      pack (Some true) @@ Content.post_edit url post
-    | Response.Private.PostDoEdit url is_success =>
-      pack (Some true) @@ Content.post_do_edit url is_success
-    | Response.Private.PostDoDelete is_success =>
-      pack (Some true) @@ Content.post_do_delete is_success
-    end
+  | Response.Index is_logged posts =>
+    pack (Some is_logged) @@ Content.index is_logged posts
+  | Response.PostShow is_logged url post =>
+    pack (Some is_logged) @@ Content.post_show is_logged url post
+  | Response.PostAdd => pack (Some true) @@ Content.post_add
+  | Response.PostDoAdd is_success =>
+    pack (Some true) @@ Content.post_do_add is_success
+  | Response.PostEdit url post => pack (Some true) @@ Content.post_edit url post
+  | Response.PostDoEdit url is_success =>
+    pack (Some true) @@ Content.post_do_edit url is_success
+  | Response.PostDoDelete is_success =>
+    pack (Some true) @@ Content.post_do_delete is_success
   end.
 
 (** A raw response is the MIME type, the cookies and the pretty-printed body. *)
