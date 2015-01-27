@@ -9,7 +9,6 @@ The aim of this project is to demonstrate that applications with I/Os can be wri
 Add the Coq repositories with [OPAM](https://opam.ocaml.org/):
 
     opam repo add coq-stable https://github.com/coq/repo-stable.git
-    opam repo add coq-unstable https://github.com/coq/repo-unstable.git
 
 Install the dependencies:
 
