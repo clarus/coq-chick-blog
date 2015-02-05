@@ -95,10 +95,7 @@ Module Controller.
 
   (** Confirmation that the user is logged in. *)
   Definition login (is_logged : bool) : C.t Response.t :=
-    if is_logged then
-      ret Response.Login
-    else
-      forbidden.
+    ret Response.Login.
 
   (** Confirmation that the user is logged out. *)
   Definition logout : C.t Response.t :=

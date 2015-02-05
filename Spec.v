@@ -170,7 +170,7 @@ Module PublicResponses.
     match answer with
     | Response.NotFound | Response.WrongArguments | Response.Forbidden
       | Response.Static _ _ | Response.Logout | Response.Index _ _
-      | Response.PostShow _ _ _ => true
+      | Response.PostShow _ _ _ | Response.Login => true
     | _ => false
     end.
 
