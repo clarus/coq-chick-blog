@@ -1,7 +1,7 @@
 # ChickBlog
 A blog engine written and proven in [Coq](https://coq.inria.fr/).
 
-This is a demo blog engine where an user can login (no passwords), add, edit or delete posts. The code is written mostly in Coq, compiled to OCaml and linked to the [CoHTTP](https://github.com/mirage/ocaml-cohttp) library to handle the HTTP protocol.
+This is a demo blog engine where a user can login (no passwords), add, edit or delete posts. The code is written mostly in Coq, compiled to OCaml and linked to the [CoHTTP](https://github.com/mirage/ocaml-cohttp) library to handle the HTTP protocol.
 
 The aim of this project is to demonstrate that applications with I/Os can be written and specified naturally using the (new) concept of [symbolic simulations in Coq](http://coq-blog.clarus.me/checking-concurrent-programs-with-symbolic-simulations.html).
 
@@ -54,7 +54,7 @@ A computation can either:
 The purity of Coq ensures that each request is answered exactly once in finite time. We specify the behavior of the server in `Spec.v`.
 
 ### Scenarios
-A scenario is a set of runs of the server. A type-checking scenario shows that the server behaves as expected in a certain use case. For example, we check that when we create, edit and view a post we get the same result as what we entered. You can think of a scenario as an unit test with universally quantified variables.
+A scenario is a set of runs of the server. A type-checking scenario shows that the server behaves as expected in a certain use case. For example, we check that when we create, edit and view a post we get the same result as what we entered. You can think of a scenario as a unit test with universally quantified variables.
 
 Here is a simple check of the execution of the index page:
 
