@@ -1,11 +1,11 @@
--R . ChickBlog
+-R src ChickBlog
 
-Computation.v
-Extraction.v
-Http.v
-Main.v
-Model.v
-Render.v
-Request.v
-Response.v
-Spec.v
+src/Computation.v
+src/Extraction.v
+src/Http.v
+src/Main.v
+src/Model.v
+src/Render.v
+src/Request.v
+src/Response.v
+src/Spec.v
