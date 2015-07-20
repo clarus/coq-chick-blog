@@ -8,7 +8,7 @@ The aim of this project is to demonstrate that applications with I/Os can be wri
 ## Run
 Add the Coq repositories with [OPAM](https://opam.ocaml.org/):
 
-    opam repo add coq-stable https://github.com/coq/repo-stable.git
+    opam repo add coq-released https://coq.inria.fr/opam/released
 
 Install the dependencies:
 

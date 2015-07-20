@@ -31,7 +31,7 @@ ENV OPAMJOBS 4
 RUN opam install -y coq.8.4.5
 
 # Coq repositories
-RUN opam repo add coq-stable https://github.com/coq/repo-stable.git
+RUN opam repo add coq-released https://coq.inria.fr/opam/released
 
 # Dependencies
 RUN opam install -y coq:list-string coq:error-handlers coq:function-ninjas coq:moment
