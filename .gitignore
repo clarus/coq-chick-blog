@@ -5,3 +5,4 @@ extraction/static/
 *.vo
 *.glob
 *.v.d
+*.aux
