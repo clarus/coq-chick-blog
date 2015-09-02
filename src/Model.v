@@ -37,7 +37,7 @@ Module Post.
         let n_9 := Ascii.N_of_ascii "9" in
         if (N.leb n_a n && N.leb n n_z) || (N.leb n_A n && N.leb n n_Z) ||
           (N.leb n_0 n && N.leb n n_9) then
-          LString.Char.down_case c :: to_url title 
+          LString.Char.down_case c :: to_url title
         else
           "-" :: to_url title
       end.
