@@ -94,28 +94,29 @@ Definition list_posts (directory : LString.t)
     end)
     posts [])).
 
+Definition eval_command (c : Command.t) : Lwt.t (Command.answer c) :=
+  match c return Lwt.t (Command.answer c) with
+  | Command.ReadFile file_name =>
+    Lwt.bind (Lwt.read_file @@ String.of_lstring file_name) (fun content =>
+    Lwt.ret @@ Option.map content String.to_lstring)
+  | Command.UpdateFile file_name content =>
+    let file_name := String.of_lstring file_name in
+    let content := String.of_lstring content in
+    Lwt.update_file file_name content
+  | Command.DeleteFile file_name =>
+    Lwt.delete_file @@ String.of_lstring file_name
+  | Command.ListPosts directory => list_posts directory
+  | Command.Log message =>
+    Lwt.bind (Lwt.printl @@ String.of_lstring message) (fun _ =>
+    Lwt.ret tt)
+  end.
+
 (** Evaluate a Coq computation to an Lwt expression. *)
 Fixpoint eval {A : Type} (x : C.t A) : Lwt.t A :=
   match x with
   | C.Ret x => Lwt.ret x
-  | C.Call (Command.ReadFile file_name) handler =>
-    Lwt.bind (Lwt.read_file @@ String.of_lstring file_name) (fun content =>
-    eval @@ handler @@ option_map String.to_lstring content)
-  | C.Call (Command.UpdateFile file_name content) handler =>
-    let file_name := String.of_lstring file_name in
-    let content := String.of_lstring content in
-    Lwt.bind (Lwt.update_file file_name content) (fun is_success =>
-    eval @@ handler is_success)
-  | C.Call (Command.DeleteFile file_name) handler =>
-    Lwt.bind (Lwt.delete_file @@ String.of_lstring file_name) (fun is_success =>
-    eval @@ handler is_success)
-  | C.Call (Command.ListPosts directory) handler =>
-    Lwt.bind (list_posts directory) (fun posts =>
-    eval @@ handler posts)
-  | C.Call (Command.Log message) handler =>
-    let message := String.of_lstring message in
-    Lwt.bind (Lwt.printl message) (fun _ =>
-    eval @@ handler tt)
+  | C.Call c handler =>
+    Lwt.bind (eval_command c) (fun answer => eval (handler answer))
   end.
 
 (** Requests as given by CoHTTP using OCaml strings. *)

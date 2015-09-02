@@ -11,6 +11,7 @@ Require Request.
 
 Import ListNotations.
 Local Open Scope char.
+Local Set Asymmetric Patterns.
 
 (** A run is an execution of the program with explicit answers for the
     system calls. *)
