@@ -14,10 +14,9 @@ module String = struct
 
   (** Import a Coq string. *)
   let of_lstring (s : char list) : string =
-    let length = List.length s in
-    let buffer = String.create length in
-    List.iteri (fun i c -> String.set buffer i c) s;
-    buffer
+    let buffer = Buffer.create 0 in
+    List.iter (fun c -> Buffer.add_char buffer c) s;
+    Buffer.contents buffer
 end
 
 (** Read the content of a file. *)
@@ -56,8 +55,8 @@ let list_files (directory : string) : string list option Lwt.t =
 (** Start the CoHTTP server with the extracted handler. *)
 let start_server handler (port : int) : unit Lwt.t =
   let callback (connection : Cohttp_lwt_unix.Server.conn)
-    (request : Cohttp.Request.t) (body : Cohttp_lwt_body.t)
-    : (Cohttp.Response.t * Cohttp_lwt_body.t) Lwt.t =
+    (request : Cohttp.Request.t) (body : Cohttp_lwt.Body.t)
+    : (Cohttp.Response.t * Cohttp_lwt.Body.t) Lwt.t =
     let uri = Cohttp.Request.uri request in
     Lwt.bind (Lwt_io.printl @@ Uri.path_and_query uri) (fun _ ->
     let path = Str.split (Str.regexp_string "/") @@ Uri.path uri in

@@ -18,7 +18,7 @@ Definition header (is_logged : option bool) : LString.t :=
     <meta charset=""utf-8"">
     <meta name=""viewport"" content=""width=device-width, initial-scale=1"">
     <title>ChickBlog</title>
-    <link rel=""stylesheet"" href=""/static/style.min.css"" type=""text/css"" />
+    <link rel=""stylesheet"" href=""http://coq-blog.clarus.me/static/style.min.css"" type=""text/css"" />
 
     <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
     <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
@@ -149,12 +149,13 @@ Module Content.
   <div class=""form-group"">
     <label for=""year"">Year</label>
     <select class=""form-control"" id=""year"" name=""year"">
-      <option>2015</option>
-      <option>2016</option>
-      <option>2017</option>
-      <option>2018</option>
       <option>2019</option>
       <option>2020</option>
+      <option>2021</option>
+      <option>2022</option>
+      <option>2023</option>
+      <option>2024</option>
+      <option>2025</option>
     </select>
     <label for=""month"">Month</label>
     <select class=""form-control"" id=""month"" name=""month"">

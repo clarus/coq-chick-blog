@@ -1,0 +1,54 @@
+dist: bionic
+language: generic
+
+services:
+  - docker
+
+env:
+  global:
+  - PACKAGE_NAME="coq-chick-blog"
+  matrix:
+  - COQ_IMAGE="coqorg/coq:8.4"  SHOULD_SUPPORT="false"
+  - COQ_IMAGE="coqorg/coq:8.5"  SHOULD_SUPPORT="false"
+  - COQ_IMAGE="coqorg/coq:8.6"  SHOULD_SUPPORT="false"
+  - COQ_IMAGE="coqorg/coq:8.7"  SHOULD_SUPPORT="true"
+  - COQ_IMAGE="coqorg/coq:8.8"  SHOULD_SUPPORT="true"
+  - COQ_IMAGE="coqorg/coq:8.9"  SHOULD_SUPPORT="false"
+  - COQ_IMAGE="coqorg/coq:8.10" SHOULD_SUPPORT="false"
+
+install: |
+  # Prepare the COQ container
+  docker pull ${COQ_IMAGE}
+  docker run -d -i --init --name=COQ -v ${TRAVIS_BUILD_DIR}:/home/project -w /home/project ${COQ_IMAGE}
+  docker exec COQ /bin/bash --login -c "
+    # This bash script is double-quoted to interpolate Travis CI env vars:
+    echo \"Build triggered by ${TRAVIS_EVENT_TYPE}\"
+    export PS4='+ \e[33;1m(\$0 @ line \$LINENO) \$\e[0m '
+    set -ex  # -e = exit on failure; -x = trace for debug
+    opam update
+    opam pin add ${PACKAGE_NAME} . --kind=path --no-action -y
+    opam config list; opam repo list; opam pin list; opam list
+    " install
+
+script:
+- echo -e "${ANSI_YELLOW}Building...${ANSI_RESET}" && echo -en 'travis_fold:start:script\\r'
+- |
+  docker exec COQ /bin/bash --login -c "
+    export PS4='+ \e[33;1m(\$0 @ line \$LINENO) \$\e[0m '
+    set -ex
+    sudo chown -R coq:coq /home/project
+    # Check if the package is compatible with the current environment
+    if [ "${SHOULD_SUPPORT}" = "true" ] || opam install ${PACKAGE_NAME} --show-action -y; then
+      # First install the dependencies
+      sudo apt-get update
+      opam depext ${PACKAGE_NAME} -y
+      opam install ${PACKAGE_NAME} --deps-only -y
+      opam list
+      # Then install the package itself in verbose mode
+      opam install ${PACKAGE_NAME} -v -y
+    fi;
+    " script
+- echo -en 'travis_fold:end:script\\r'
+
+after_script:
+- docker stop COQ  # optional
