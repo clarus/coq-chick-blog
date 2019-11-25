@@ -1,0 +1,33 @@
+version: "dev"
+
+opam-version: "2.0"
+maintainer: "dev@clarus.me"
+homepage: "https://github.com/clarus/coq-chick-blog"
+dev-repo: "git+https://github.com/clarus/coq-chick-blog.git"
+bug-reports: "https://github.com/clarus/coq-chick-blog/issues"
+authors: ["Guillaume Claret"]
+license: "MIT"
+build: [
+  ["./configure.sh"]
+  [make "-j%{jobs}%"]
+  [make "-C" "extraction" "-j%{jobs}%"]
+]
+install: [
+  [make "install"]
+]
+depends: [
+  "cohttp-lwt-unix"
+  "coq-error-handlers"
+  "coq-function-ninjas"
+  "coq-list-string"
+  "coq-moment"
+  "coq"
+  "lwt"
+  "ocaml"
+  "ocamlfind" {build}
+]
+tags: [
+  "keyword:effects"
+  "keyword:extraction"
+]
+synopsis: "A blog engine written and proven in Coq"
