@@ -1,8 +1,10 @@
 Makefile
 Makefile.bak
+Makefile.conf
 opam.*/
 extraction/static/
 *.vo
 *.glob
 *.v.d
 *.aux
+*.html

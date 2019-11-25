@@ -46,6 +46,8 @@ script:
       opam list
       # Then install the package itself in verbose mode
       opam install ${PACKAGE_NAME} -v -y
+      # Check that the binary is indeed installed
+      which coq-chick-blog
     fi;
     " script
 - echo -en 'travis_fold:end:script\\r'

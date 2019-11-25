@@ -12,9 +12,6 @@ build: [
   [make "-j%{jobs}%"]
   [make "-C" "extraction" "-j%{jobs}%"]
 ]
-install: [
-  [make "install"]
-]
 depends: [
   "cohttp-lwt-unix"
   "coq-error-handlers"
@@ -27,6 +24,7 @@ depends: [
   "ocamlfind" {build}
 ]
 tags: [
+  "keyword:blog"
   "keyword:effects"
   "keyword:extraction"
 ]

@@ -19,7 +19,7 @@ Local Open Scope list.
 
 (** The directory where posts are saved. *)
 Definition posts_directory : LString.t :=
-  LString.s "posts/".
+  LString.s "./".
 
 (** Some helper functions for the controller. *)
 Module Helpers.
@@ -119,7 +119,7 @@ Module Controller.
     if negb is_logged then
       forbidden
     else
-      let file_name := LString.s "posts/" ++ Moment.Date.Print.date date ++
+      let file_name := posts_directory ++ Moment.Date.Print.date date ++
         LString.s " " ++ title ++ LString.s ".html" in
       call! is_success := Command.UpdateFile file_name (LString.s "") in
       ret @@ Response.PostDoAdd is_success.

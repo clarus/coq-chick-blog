@@ -12,12 +12,8 @@ Add the Coq repositories with [OPAM](https://opam.ocaml.org/):
 
 Install the dependencies:
 
-    opam install --jobs=4 coq:list-string coq:error-handlers coq:function-ninjas coq:moment
-    opam install --jobs=4 lwt cohttp
-
-Download the CSS:
-
-    curl -L https://github.com/clarus/coq-red-css/releases/download/coq-blog.1.0.2/style.min.css >extraction/static/style.min.css
+    opam install coq-list-string coq-error-handlers coq-function-ninjas coq-moment
+    opam install lwt cohttp-lwt-unix
 
 Compile:
 
@@ -28,12 +24,6 @@ Compile:
 Run on [localhost:8008](http://localhost:8008/):
 
     ./chickBlog.native
-
-### Dockerfile
-A Dockerfile is provided to run ChickBlog in an isolated environment using [Docker](https://www.docker.com/):
-
-    docker build --tag=chick-blog .
-    docker run -ti -p 8008:8008 chick-blog
 
 ## Specification
 The blog is defined in `Main.v` as the function:
