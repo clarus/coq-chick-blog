@@ -18,6 +18,7 @@ Definition header (is_logged : option bool) : LString.t :=
     <meta charset=""utf-8"">
     <meta name=""viewport"" content=""width=device-width, initial-scale=1"">
     <title>ChickBlog</title>
+    <link rel=""icon"" data-emoji=""🐣"" type=""image/png"">
     <link rel=""stylesheet"" href=""http://coq-blog.clarus.me/static/style.min.css"" type=""text/css"" />
 
     <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
@@ -31,7 +32,7 @@ Definition header (is_logged : option bool) : LString.t :=
     <div class=""container-fluid"">
       <div class=""navbar navbar-default"" role=""navigation"">
         <div class=""navbar-header"">
-          <a class=""navbar-brand"" href=""/"">ChickBlog</a>
+          <a class=""navbar-brand"" href=""/"">🐣 ChickBlog</a>
         </div>" ++
   match is_logged with
   | None => LString.s ""
@@ -68,6 +69,27 @@ Definition footer : LString.t :=
         </p>
       </div>
     </div>
+    <script type=""text/javascript"">
+      // Add a Unicode character as favicon.
+      // Thanks https://koddsson.com/posts/emoji-favicon/
+      const favicon = document.querySelector(""link[rel=icon]"");
+
+      if (favicon) {
+        const emoji = favicon.getAttribute(""data-emoji"");
+
+        if (emoji) {
+          const canvas = document.createElement(""canvas"");
+          canvas.height = 64;
+          canvas.width = 64;
+
+          const ctx = canvas.getContext(""2d"");
+          ctx.font = ""64px serif"";
+          ctx.fillText(emoji, 0, 64);
+
+          favicon.href = canvas.toDataURL();
+        }
+      }
+    </script>
   </body>
 </html>
 ".
