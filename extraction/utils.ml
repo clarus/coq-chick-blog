@@ -71,5 +71,5 @@ let start_server handler (port : int) : unit Lwt.t =
       (("content-type", mime_type) :: cookies) in
     (Cohttp_lwt_unix.Server.respond_string ~headers:headers) `OK content ())) in
   let config = Cohttp_lwt_unix.Server.make callback () in
-  Lwt.bind (Lwt_io.printlf "HTTP server starting on port %d." port) (fun _ ->
+  Lwt.bind (Lwt_io.printlf "HTTP server starting on http://localhost:%d/" port) (fun _ ->
   Cohttp_lwt_unix.Server.create ~mode:(`TCP (`Port port)) config)

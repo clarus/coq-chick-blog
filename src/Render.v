@@ -18,6 +18,7 @@ Definition header (is_logged : option bool) : LString.t :=
     <meta charset=""utf-8"">
     <meta name=""viewport"" content=""width=device-width, initial-scale=1"">
     <title>ChickBlog</title>
+    <link rel=""icon"" data-emoji=""🐣"" type=""image/png"">
     <link rel=""stylesheet"" href=""http://coq-blog.clarus.me/static/style.min.css"" type=""text/css"" />
 
     <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
@@ -31,7 +32,7 @@ Definition header (is_logged : option bool) : LString.t :=
     <div class=""container-fluid"">
       <div class=""navbar navbar-default"" role=""navigation"">
         <div class=""navbar-header"">
-          <a class=""navbar-brand"" href=""/"">ChickBlog</a>
+          <a class=""navbar-brand"" href=""/"">🐣 ChickBlog</a>
         </div>" ++
   match is_logged with
   | None => LString.s ""
@@ -68,6 +69,27 @@ Definition footer : LString.t :=
         </p>
       </div>
     </div>
+    <script type=""text/javascript"">
+      // Add a Unicode character as favicon.
+      // Thanks https://koddsson.com/posts/emoji-favicon/
+      const favicon = document.querySelector(""link[rel=icon]"");
+
+      if (favicon) {
+        const emoji = favicon.getAttribute(""data-emoji"");
+
+        if (emoji) {
+          const canvas = document.createElement(""canvas"");
+          canvas.height = 64;
+          canvas.width = 64;
+
+          const ctx = canvas.getContext(""2d"");
+          ctx.font = ""64px serif"";
+          ctx.fillText(emoji, 0, 64);
+
+          favicon.href = canvas.toDataURL();
+        }
+      }
+    </script>
   </body>
 </html>
 ".
@@ -95,13 +117,17 @@ Definition date (post_header : Post.Header.t) : LString.t :=
 
 (** The HTML content of pages. *)
 Module Content.
+  (** A back to the home message. *)
+  Definition back_to_the_home : LString.t :=
+    LString.s "<p>Back to the <a href=""/"">home</a>.</p>".
+
   (** The confirmation of a login. *)
   Definition login : LString.t :=
-    LString.s "<p>You are now logged in.</p>".
+    LString.s "<p>You are now logged in.</p>" ++ back_to_the_home.
 
   (** The confirmation of a logout. *)
   Definition logout : LString.t :=
-    LString.s "<p>You are now logged out.</p>".
+    LString.s "<p>You are now logged out.</p>" ++ back_to_the_home.
 
   (** The index page, with the list of posts. *)
   Definition index (is_logged : bool) (posts : list Post.Header.t) : LString.t :=
@@ -111,8 +137,9 @@ Module Content.
 
 <h2>Posts" ++
   LString.s (if is_logged then " <small><a href=""/posts/add"">add</a></small>" else "") ++
-  LString.s "</h2>
-<ul>" ++
+  LString.s "</h2>" ++
+  LString.s match posts with [] => "No posts for now." | _ :: _ => "" end ++
+  LString.s "<ul>" ++
   LString.join [LString.Char.n] (posts |> List.map (fun post =>
     LString.s "<li><a href=""/posts/show/" ++ Post.Header.url post ++ LString.s """>" ++
     Post.Header.title post ++ LString.s "</a> " ++ date post ++ LString.s "</li>")) ++
@@ -212,10 +239,12 @@ Module Content.
 
   (** Confirmation (or not) that a post was added. *)
   Definition post_do_add (is_success : bool) : LString.t :=
-    if is_success then
-      LString.s "<p>Post successfully added.</p>"
-    else
-      LString.s "<p>The post could not be added.</p>".
+    LString.s (
+      if is_success then
+        "<p>Post successfully added.</p>"
+      else
+        "<p>The post could not be added.</p>"
+    ) ++ back_to_the_home.
 
   (** The form to edit a post. *)
   Definition post_edit (url : LString.t) (post : option Post.t) : LString.t :=
@@ -251,7 +280,7 @@ Module Content.
       "Post successfully removed."
     else
       "The post could not be removed.") ++
-    LString.s "<p>".
+    LString.s "<p>" ++ back_to_the_home.
 End Content.
 
 (** Add a header and a footer to an HTML content. *)
