@@ -23,6 +23,9 @@ depends: [
   "ocaml"
   "ocamlfind" {build}
 ]
+conflicts: [
+  "ocaml-secondary-compiler"
+]
 tags: [
   "keyword:blog"
   "keyword:effects"

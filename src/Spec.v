@@ -1,6 +1,7 @@
 (** Specifications. *)
 Require Import Coq.Lists.List.
 Require Import Coq.Strings.Ascii.
+Require Import Coq.Strings.String.
 Require Import FunctionNinjas.All.
 Require Import ListString.All.
 Require Import Computation.
@@ -11,6 +12,8 @@ Require Request.
 
 Import ListNotations.
 Local Open Scope char.
+Local Open Scope string.
+Local Open Scope list.
 Local Set Asymmetric Patterns.
 
 (** A run is an execution of the program with explicit answers for the

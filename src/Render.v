@@ -1,6 +1,6 @@
 (** Pretty-print responses to HTML. *)
 Require Import Coq.Lists.List.
-Require Import Coq.Strings.Ascii.
+Require Import Coq.Strings.String.
 Require Import FunctionNinjas.All.
 Require Import ListString.All.
 Require Http.
@@ -8,7 +8,8 @@ Require Import Model.
 Require Response.
 
 Import ListNotations.
-Local Open Scope char.
+Local Open Scope string.
+Local Open Scope list.
 
 (** The header of a page with the authentication status (logged in or out). *)
 Definition header (is_logged : option bool) : LString.t :=

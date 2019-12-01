@@ -1,6 +1,7 @@
 (** The main function (the server handler) and the controller. *)
 Require Import Coq.Lists.List.
 Require Import Coq.NArith.NArith.
+Require Import Coq.Strings.Ascii.
 Require Import Coq.Strings.String.
 Require Import ErrorHandlers.All.
 Require Import FunctionNinjas.All.
@@ -14,6 +15,7 @@ Require Response.
 
 Import ListNotations.
 Import C.Notations.
+Local Open Scope char.
 Local Open Scope string.
 Local Open Scope list.
 
