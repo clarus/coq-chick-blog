@@ -3,12 +3,14 @@ Require Import Coq.Bool.Bool.
 Require Import Coq.Lists.List.
 Require Import Coq.NArith.NArith.
 Require Import Coq.Strings.Ascii.
+Require Import Coq.Strings.String.
 Require Import ErrorHandlers.All.
 Require Import FunctionNinjas.All.
 Require Import ListString.All.
 Require Import Moment.All.
 
 Import ListNotations.
+Local Open Scope string.
 Local Open Scope char.
 
 (** A post from the user. *)
